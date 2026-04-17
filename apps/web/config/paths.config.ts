@@ -19,6 +19,8 @@ const PathsSchema = z.object({
     accountBilling: z.string().min(1),
     accountMembers: z.string().min(1),
     accountBillingReturn: z.string().min(1),
+    accountApiKeys: z.string().min(1),
+    accountUsage: z.string().min(1),
     joinTeam: z.string().min(1),
   }),
 });
@@ -42,6 +44,8 @@ const pathsConfig = PathsSchema.parse({
     accountBilling: `/home/[account]/billing`,
     accountMembers: `/home/[account]/members`,
     accountBillingReturn: `/home/[account]/billing/return`,
+    accountApiKeys: `/home/[account]/api-keys`,
+    accountUsage: `/home/[account]/usage`,
     joinTeam: '/join',
   },
 } satisfies z.infer<typeof PathsSchema>);

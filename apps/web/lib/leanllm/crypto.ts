@@ -1,0 +1,19 @@
+/**
+ * Generate a LeanLLM API key and its SHA-256 hash.
+ * The raw key is shown once to the user; only the hash is stored.
+ */
+export async function generateApiKey() {
+  const rawKey = 'lllm_' + crypto.randomUUID().replace(/-/g, '').slice(0, 32);
+  const keyPrefix = rawKey.slice(0, 12) + '...';
+  const keyHash = await hashApiKey(rawKey);
+
+  return { rawKey, keyPrefix, keyHash };
+}
+
+export async function hashApiKey(rawKey: string): Promise<string> {
+  const encoded = new TextEncoder().encode(rawKey);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', encoded);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+}

@@ -9,8 +9,9 @@ import featuresFlagConfig from '~/config/feature-flags.config';
 import pathsConfig from '~/config/paths.config';
 import { createI18nServerInstance } from '~/lib/i18n/i18n.server';
 
-// local imports
 import { TeamAccountLayoutPageHeader } from '../_components/team-account-layout-page-header';
+import { createApiKeysService } from '../api-keys/_lib/server/api-keys.service';
+import { IntegrationGuide } from './_lib/components/integration-guide';
 
 export const generateMetadata = async () => {
   const i18n = await createI18nServerInstance();
@@ -30,7 +31,8 @@ const paths = {
 };
 
 async function TeamAccountSettingsPage(props: TeamAccountSettingsPageProps) {
-  const api = createTeamAccountsApi(getSupabaseServerClient());
+  const client = getSupabaseServerClient();
+  const api = createTeamAccountsApi(client);
   const slug = (await props.params).account;
   const data = await api.getTeamAccount(slug);
 
@@ -46,6 +48,10 @@ async function TeamAccountSettingsPage(props: TeamAccountSettingsPageProps) {
     enableTeamDeletion: featuresFlagConfig.enableTeamDeletion,
   };
 
+  const apiKeysService = createApiKeysService(client);
+  const apiKeys = await apiKeysService.listByAccount(account.id);
+  const firstActiveKey = apiKeys.find((k) => k.is_active);
+
   return (
     <>
       <TeamAccountLayoutPageHeader
@@ -55,7 +61,9 @@ async function TeamAccountSettingsPage(props: TeamAccountSettingsPageProps) {
       />
 
       <PageBody>
-        <div className={'flex max-w-2xl flex-1 flex-col'}>
+        <div className={'flex max-w-2xl flex-1 flex-col space-y-6'}>
+          <IntegrationGuide apiKeyPrefix={firstActiveKey?.key_prefix} />
+
           <TeamAccountSettingsContainer
             account={account}
             paths={paths}

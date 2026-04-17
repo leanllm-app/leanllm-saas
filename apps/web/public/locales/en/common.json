@@ -63,6 +63,8 @@
     "members": "Members",
     "billing": "Billing",
     "dashboard": "Dashboard",
+    "apiKeys": "API Keys",
+    "usage": "Usage",
     "settings": "Settings",
     "profile": "Profile",
     "application": "Application"

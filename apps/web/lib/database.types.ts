@@ -138,6 +138,131 @@ export type Database = {
           },
         ]
       }
+      api_keys: {
+        Row: {
+          api_key_id: string
+          account_id: string
+          key_hash: string
+          key_prefix: string
+          name: string
+          is_active: boolean
+          created_at: string
+          last_used_at: string | null
+        }
+        Insert: {
+          api_key_id?: string
+          account_id: string
+          key_hash: string
+          key_prefix: string
+          name?: string
+          is_active?: boolean
+          created_at?: string
+          last_used_at?: string | null
+        }
+        Update: {
+          api_key_id?: string
+          account_id?: string
+          key_hash?: string
+          key_prefix?: string
+          name?: string
+          is_active?: boolean
+          created_at?: string
+          last_used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_keys_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          event_id: string
+          account_id: string
+          api_key_id: string | null
+          timestamp: string
+          model: string
+          provider: string
+          input_tokens: number | null
+          output_tokens: number | null
+          total_tokens: number | null
+          cost_usd: number | null
+          latency_ms: number | null
+          user_id: string | null
+          environment: string | null
+          feature: string | null
+          labels: Json | null
+          prompt: string | null
+          response: string | null
+          metadata: Json | null
+          schema_version: number | null
+          ingested_at_utc: string
+        }
+        Insert: {
+          event_id: string
+          account_id: string
+          api_key_id?: string | null
+          timestamp: string
+          model: string
+          provider: string
+          input_tokens?: number | null
+          output_tokens?: number | null
+          total_tokens?: number | null
+          cost_usd?: number | null
+          latency_ms?: number | null
+          user_id?: string | null
+          environment?: string | null
+          feature?: string | null
+          labels?: Json | null
+          prompt?: string | null
+          response?: string | null
+          metadata?: Json | null
+          schema_version?: number | null
+          ingested_at_utc?: string
+        }
+        Update: {
+          event_id?: string
+          account_id?: string
+          api_key_id?: string | null
+          timestamp?: string
+          model?: string
+          provider?: string
+          input_tokens?: number | null
+          output_tokens?: number | null
+          total_tokens?: number | null
+          cost_usd?: number | null
+          latency_ms?: number | null
+          user_id?: string | null
+          environment?: string | null
+          feature?: string | null
+          labels?: Json | null
+          prompt?: string | null
+          response?: string | null
+          metadata?: Json | null
+          schema_version?: number | null
+          ingested_at_utc?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["api_key_id"]
+          },
+        ]
+      }
       billing_customers: {
         Row: {
           account_id: string
