@@ -15,6 +15,7 @@
     "cmdk": "1.1.1",
     "input-otp": "1.4.2",
     "lucide-react": "catalog:",
+    "motion": "^12.38.0",
     "radix-ui": "1.4.3",
     "react-dropzone": "^15.0.0",
     "react-top-loading-bar": "3.0.2",
@@ -120,7 +121,8 @@
     "./empty-state": "./src/makerkit/empty-state.tsx",
     "./marketing": "./src/makerkit/marketing/index.tsx",
     "./oauth-provider-logo-image": "./src/makerkit/oauth-provider-logo-image.tsx",
-    "./file-uploader": "./src/makerkit/file-uploader.tsx"
+    "./file-uploader": "./src/makerkit/file-uploader.tsx",
+    "./light-rays": "./src/shadcn/light-rays.tsx"
   },
   "typesVersions": {
     "*": {
