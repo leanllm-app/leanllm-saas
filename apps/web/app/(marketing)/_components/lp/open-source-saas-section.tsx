@@ -1,4 +1,5 @@
 import { ArrowRightIcon } from 'lucide-react';
+import { RevealItem, StaggerReveal } from './scroll-reveal';
 
 type OfferCard = {
   label: string;
@@ -47,50 +48,51 @@ export function OpenSourceSaasSection() {
           maintenance.
         </p>
 
-        <div className="mt-8 grid gap-4 sm:mt-10 md:grid-cols-2">
+        <StaggerReveal className="mt-8 grid gap-4 sm:mt-10 md:grid-cols-2" delayChildren={0.06}>
           {offers.map((item) => (
-            <article
-              key={item.title}
-              className={`rounded-2xl border p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:p-6 ${
-                item.featured
-                  ? 'border-[#507afe]/40 bg-linear-to-br from-white to-[#507afe]/5'
-                  : 'border-slate-200 bg-white'
-              }`}
-            >
-              <span
-                className={`inline-flex rounded-md px-2.5 py-1 text-xs font-semibold ${
+            <RevealItem key={item.title}>
+              <article
+                className={`rounded-2xl border p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:p-6 ${
                   item.featured
-                    ? 'bg-[#507afe]/10 text-[#507afe]'
-                    : 'bg-slate-100 text-slate-600'
+                    ? 'border-[#507afe]/40 bg-linear-to-br from-white to-[#507afe]/5'
+                    : 'border-slate-200 bg-white'
                 }`}
               >
-                {item.label}
-              </span>
+                <span
+                  className={`inline-flex rounded-md px-2.5 py-1 text-xs font-semibold ${
+                    item.featured
+                      ? 'bg-[#507afe]/10 text-[#507afe]'
+                      : 'bg-slate-100 text-slate-600'
+                  }`}
+                >
+                  {item.label}
+                </span>
 
-              <h3 className="mt-4 text-2xl font-semibold text-slate-900">
-                {item.title}
-              </h3>
+                <h3 className="mt-4 text-2xl font-semibold text-slate-900">
+                  {item.title}
+                </h3>
 
-              <p className="mt-3 text-sm leading-relaxed text-slate-600">
-                {item.description}
-              </p>
+                <p className="mt-3 text-sm leading-relaxed text-slate-600">
+                  {item.description}
+                </p>
 
-              <a
-                href={item.ctaHref}
-                target={item.ctaHref.startsWith('http') ? '_blank' : undefined}
-                rel={item.ctaHref.startsWith('http') ? 'noreferrer' : undefined}
-                className={`mt-6 inline-flex h-10 items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold transition sm:h-11 ${
-                  item.featured
-                    ? 'bg-[#507afe] text-white hover:bg-[#4169f3]'
-                    : 'border border-slate-200 bg-white text-slate-800 hover:border-slate-300 hover:bg-slate-50'
-                }`}
-              >
-                {item.ctaLabel}
-                <ArrowRightIcon className="size-4" />
-              </a>
-            </article>
+                <a
+                  href={item.ctaHref}
+                  target={item.ctaHref.startsWith('http') ? '_blank' : undefined}
+                  rel={item.ctaHref.startsWith('http') ? 'noreferrer' : undefined}
+                  className={`mt-6 inline-flex h-10 items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold transition sm:h-11 ${
+                    item.featured
+                      ? 'bg-[#507afe] text-white hover:bg-[#4169f3]'
+                      : 'border border-slate-200 bg-white text-slate-800 hover:border-slate-300 hover:bg-slate-50'
+                  }`}
+                >
+                  {item.ctaLabel}
+                  <ArrowRightIcon className="size-4" />
+                </a>
+              </article>
+            </RevealItem>
           ))}
-        </div>
+        </StaggerReveal>
       </div>
     </section>
   );

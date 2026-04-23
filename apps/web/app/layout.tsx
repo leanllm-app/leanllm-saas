@@ -30,7 +30,7 @@ export default async function RootLayout({
   const language = i18n.language;
 
   return (
-    <html lang={language} className={className}>
+    <html lang={language} className={className} suppressHydrationWarning>
       <body>
         <RootProviders theme={theme} lang={language} nonce={nonce}>
           {children}

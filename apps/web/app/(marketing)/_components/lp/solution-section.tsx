@@ -1,39 +1,18 @@
+import { cn } from '@kit/ui/utils';
 import {
   ActivityIcon,
   Layers3Icon,
   UserRoundIcon,
   WaypointsIcon,
-  type LucideIcon,
 } from 'lucide-react';
+import { RevealItem, StaggerReveal } from './scroll-reveal';
 
-type SolutionItem = {
-  icon: LucideIcon;
-  title: string;
-  description: string;
+type FeatureType = {
+	title: string;
+	icon: React.ReactNode;
+	description: string;
 };
 
-const solutions: SolutionItem[] = [
-  {
-    icon: Layers3Icon,
-    title: 'Cost per feature',
-    description: 'Know exactly which product feature is expensive.',
-  },
-  {
-    icon: UserRoundIcon,
-    title: 'Cost per user',
-    description: 'Find the users driving your LLM spend.',
-  },
-  {
-    icon: WaypointsIcon,
-    title: 'Most expensive requests',
-    description: 'Surface the outliers that spike your bill.',
-  },
-  {
-    icon: ActivityIcon,
-    title: 'Token + latency tracking',
-    description: 'Correlate cost with performance in one view.',
-  },
-];
 
 export function SolutionSection() {
   return (
@@ -59,27 +38,90 @@ export function SolutionSection() {
           tells you where the money goes and what to do about it.
         </p>
 
-        <div className="mt-8 grid gap-3 sm:mt-10 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
-          {solutions.map((item) => (
-            <article
-              key={item.title}
-              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_8px_24px_-20px_rgba(80,122,254,0.5)] transition hover:-translate-y-0.5 hover:border-[#507afe]/30 hover:shadow-[0_18px_36px_-24px_rgba(80,122,254,0.6)]"
-            >
-              <div>
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-linear-to-r from-[#507afe]/12 to-[#655ccf]/12 text-[#507afe]">
-                  <item.icon className="size-4" />
-                </span>
-                <h3 className="mt-3 text-base font-semibold text-slate-900">
-                  {item.title}
-                </h3>
-                <p className="mt-1 text-sm leading-relaxed text-slate-600">
-                  {item.description}
-                </p>
-              </div>
-            </article>
+        
+        <StaggerReveal className="grid grid-cols-1 gap-8 pt-12 md:grid-cols-2 lg:grid-cols-4">
+          {features.map((feature) => (
+            <RevealItem key={feature.title}>
+              <FeatureCard feature={feature} />
+            </RevealItem>
           ))}
-        </div>
+        </StaggerReveal>
       </div>
     </section>
   );
 }
+
+function FeatureCard({
+	feature,
+	className,
+	...props
+}: React.ComponentProps<"div"> & {
+	feature: FeatureType;
+}) {
+	return (
+		<div
+			className={cn(
+				"relative flex flex-col justify-between gap-6 overflow-hidden rounded-3xl border border-slate-200/80 bg-background px-6 pt-8 pb-6 shadow-[0_14px_34px_-28px_rgba(15,23,42,0.45)] transition-transform duration-300 will-change-transform hover:-translate-y-1.5",
+				// Spotlight starts near the icon (top-left)
+				"bg-[radial-gradient(95%_110%_at_14%_0%,rgba(80,122,254,0.18),rgba(101,92,207,0.09)_34%,transparent_72%)]",
+				// Keep a subtle effect if dark mode appears anywhere
+				"dark:bg-[radial-gradient(50%_80%_at_25%_0%,--theme(--color-foreground/.1),transparent)]",
+				className
+			)}
+			{...props}
+		>
+			<div
+				className={cn(
+					"relative z-10 flex w-fit items-center justify-center rounded-lg border border-white/70 bg-white/55 p-3 shadow-[0_8px_24px_-18px_rgba(30,41,59,0.55)] backdrop-blur-md",
+					"[&_svg]:size-5 [&_svg]:stroke-[1.5] [&_svg]:text-foreground"
+				)}
+			>
+				{feature.icon}
+			</div>
+
+			<div className="relative z-10 space-y-2">
+				<h3 className="font-medium text-base text-foreground">
+					{feature.title}
+				</h3>
+				<p className="text-muted-foreground text-sm leading-relaxed">
+					{feature.description}
+				</p>
+			</div>
+		</div>
+	);
+}
+
+const features: FeatureType[] = [
+	{
+		title: "Cost per feature",
+		icon: (
+			<Layers3Icon
+			/>
+		),
+		description: "Know exactly which product feature is expensive.",
+	},
+	{
+		title: "Cost per user",
+		icon: (
+			<UserRoundIcon
+			/>
+		),
+		description: "Find the users driving your LLM spend.",
+	},
+	{
+		title: "Most expensive requests",
+		icon: (
+			<WaypointsIcon
+			/>
+		),
+		description: "Surface the outliers that spike your bill.",
+	},
+	{
+		title: "Token + latency tracking",
+		icon: (
+			<ActivityIcon
+			/>
+		),
+		description: "Correlate cost with performance in one view.",
+	},
+];

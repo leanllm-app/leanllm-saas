@@ -1,3 +1,5 @@
+import { RevealItem, StaggerReveal } from './scroll-reveal';
+
 type ProblemStat = {
   value: string;
   title: string;
@@ -21,7 +23,7 @@ const stats: ProblemStat[] = [
 export function ProblemSection() {
   return (
     <section className="overflow-x-clip">
-      <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-8 sm:py-28 md:px-10">
+      <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-8 sm:py-20 md:px-10">
         <div className="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-2 lg:gap-12">
           <div className="lg:pr-2">
             <p className="w-fit rounded-full border border-[#507afe]/20 bg-[#507afe]/8 px-3 py-1 text-xs font-semibold tracking-[0.14em] text-[#507afe] uppercase">
@@ -44,9 +46,12 @@ export function ProblemSection() {
               <div className="relative h-[220px] sm:h-[270px]" />
             </div>
 
-            <div className="absolute left-1/2 top-1/2 flex w-[88%] max-w-[340px] -translate-x-1/2 -translate-y-1/2 flex-col items-start gap-2 sm:w-[430px] sm:max-w-none sm:gap-3">
+            <StaggerReveal
+              className="absolute left-1/2 top-1/2 flex w-[88%] max-w-[340px] -translate-x-1/2 -translate-y-1/2 flex-col items-start gap-2 sm:w-[430px] sm:max-w-none sm:gap-3"
+              delayChildren={0.12}
+            >
               {stats.map((item, index) => (
-                <div
+                <RevealItem
                   key={`${item.value}-${item.title}`}
                   className={`inline-flex w-fit max-w-full items-center gap-2.5 rounded-xl border border-white/80 bg-white/90 px-3 py-2.5 shadow-[0_16px_28px_-24px_rgba(30,41,59,0.42)] backdrop-blur-sm transition duration-200 hover:-translate-y-0.5 sm:gap-3 sm:rounded-lg sm:px-4 sm:py-2.5 sm:shadow-[0_20px_35px_-28px_rgba(30,41,59,0.45)] ${
                     index === 0
@@ -62,9 +67,9 @@ export function ProblemSection() {
                   <p className="pr-1 text-sm font-semibold text-slate-900 sm:text-base">
                     {item.title}
                   </p>
-                </div>
+                </RevealItem>
               ))}
-            </div>
+            </StaggerReveal>
           </div>
         </div>
       </div>

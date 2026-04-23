@@ -15,6 +15,7 @@ import {
   getPrimaryLineItem,
 } from '@kit/billing';
 import { Badge } from '@kit/ui/badge';
+import { BorderBeam } from '@kit/ui/border-beam';
 import { Button } from '@kit/ui/button';
 import { If } from '@kit/ui/if';
 import { Trans } from '@kit/ui/trans';
@@ -185,13 +186,27 @@ function PricingItem(
       data-cy={'subscription-plan'}
       className={cn(
         props.className,
-        `s-full bg-muted/50 relative flex flex-1 grow flex-col items-stretch justify-between self-stretch rounded px-6 py-5 lg:w-4/12 xl:max-w-[20rem]`,
+        'relative flex flex-1 grow flex-col items-stretch justify-between self-stretch overflow-hidden rounded-3xl border px-6 py-5 backdrop-blur-sm transition-transform duration-300 lg:w-4/12 xl:max-w-[20rem]',
+        'hover:-translate-y-1',
+        highlighted
+          ? 'border-slate-200/70 bg-linear-to-br from-white/90 via-[#f8f9ff]/90 to-[#eef2ff]/90 shadow-none'
+          : 'border-slate-200/80 bg-white/75 shadow-[0_16px_42px_-34px_rgba(15,23,42,0.45)]',
       )}
     >
+      <If condition={highlighted}>
+        <BorderBeam
+          size={280}
+          duration={6.5}
+          borderWidth={2}
+          colorFrom="#507afe"
+          colorTo="#b37bff"
+        />
+      </If>
+
       <If condition={props.product.badge}>
-        <div className={'absolute -top-2.5 left-0 flex w-full justify-center'}>
+        <div className={'absolute top-3 left-0 z-20 flex w-full justify-center'}>
           <Badge
-            className={highlighted ? '' : 'bg-muted'}
+            className={highlighted ? 'bg-[#0f172a] text-white' : 'bg-muted'}
             variant={highlighted ? 'default' : 'outline'}
           >
             <span>
@@ -204,12 +219,12 @@ function PricingItem(
         </div>
       </If>
 
-      <div className={'flex flex-col gap-y-4'}>
+      <div className={'relative z-10 flex flex-col gap-y-4 pt-7'}>
         <div className={'flex flex-col'}>
           <div className={'flex items-center space-x-6'}>
             <b
               className={
-                'text-secondary-foreground font-heading text-xl font-medium tracking-tight text-orange-800'
+                'text-secondary-foreground font-heading text-3xl font-semibold tracking-tight'
               }
             >
               <Trans
@@ -229,7 +244,7 @@ function PricingItem(
           </span>
         </div>
 
-        <div className={'h-px w-full border border-dashed'} />
+        <div className={'h-px w-full bg-linear-to-r from-transparent via-slate-200 to-transparent'} />
 
         <div className={'flex flex-col gap-y-1'}>
           <Price
@@ -329,7 +344,7 @@ function PricingItem(
           </If>
         </If>
 
-        <div className={'h-px w-full border border-dashed'} />
+        <div className={'h-px w-full bg-linear-to-r from-transparent via-slate-200 to-transparent'} />
 
         <div className={'flex flex-col'}>
           <FeaturesList
@@ -339,7 +354,7 @@ function PricingItem(
         </div>
 
         <If condition={props.displayPlanDetails && lineItemsToDisplay.length}>
-          <div className={'h-px w-full border border-dashed'} />
+          <div className={'h-px w-full bg-linear-to-r from-transparent via-slate-200 to-transparent'} />
 
           <div className={'flex flex-col space-y-2'}>
             <h6 className={'text-sm font-semibold'}>

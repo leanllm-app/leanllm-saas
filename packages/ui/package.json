@@ -123,7 +123,12 @@
     "./marketing": "./src/makerkit/marketing/index.tsx",
     "./oauth-provider-logo-image": "./src/makerkit/oauth-provider-logo-image.tsx",
     "./file-uploader": "./src/makerkit/file-uploader.tsx",
-    "./light-rays": "./src/shadcn/light-rays.tsx"
+    "./light-rays": "./src/shadcn/light-rays.tsx",
+    "./grid-pattern": "./src/shadcn/grid-pattern.tsx",
+    "./dot-pattern": "./src/shadcn/dot-pattern.tsx",
+    "./flickering-grid": "./src/shadcn/flickering-grid.tsx",
+    "./interactive-grid-pattern": "./src/shadcn/interactive-grid-pattern.tsx",
+    "./border-beam": "./src/shadcn/border-beam.tsx"
   },
   "typesVersions": {
     "*": {

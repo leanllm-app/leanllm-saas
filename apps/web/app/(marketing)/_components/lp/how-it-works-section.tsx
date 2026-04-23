@@ -3,6 +3,7 @@ import Link from 'next/link';
 
 import { Button } from '@kit/ui/button';
 import { Card, CardContent } from '@kit/ui/card';
+import { RevealItem, StaggerReveal } from './scroll-reveal';
 
 type StepItem = {
   step: string;
@@ -67,37 +68,36 @@ export function HowItWorksSection() {
               </Button>
             </div>
 
-            <div className="min-w-0 space-y-3 sm:space-y-4">
+            <StaggerReveal className="min-w-0 space-y-3 sm:space-y-4" delayChildren={0.08}>
               {steps.map((item) => (
-                <Card
-                  key={item.step}
-                  className="w-full overflow-hidden rounded-2xl border-slate-200/90 bg-linear-to-r from-white via-white to-[#faf9ff] transition hover:border-[#507afe]/25"
-                >
-                  <CardContent className="min-w-0 space-y-3 px-4 py-4 sm:px-5">
-                    <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-3">
-                      <span className="inline-flex shrink-0 rounded-md border border-[#507afe]/20 bg-linear-to-r from-[#507afe]/10 to-[#655ccf]/10 px-2.5 py-1 text-xs font-semibold text-[#507afe]">
-                        {item.step}
-                      </span>
-                      <h3 className="min-w-0 text-base font-semibold text-slate-900 sm:text-lg">
-                        {item.title}
-                      </h3>
-                    </div>
+                <RevealItem key={item.step}>
+                  <Card className="w-full overflow-hidden rounded-2xl border-slate-200/90 bg-linear-to-r from-white via-white to-[#faf9ff] transition hover:border-[#507afe]/25">
+                    <CardContent className="min-w-0 space-y-3 px-4 py-4 sm:px-5">
+                      <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-3">
+                        <span className="inline-flex shrink-0 rounded-md border border-[#507afe]/20 bg-linear-to-r from-[#507afe]/10 to-[#655ccf]/10 px-2.5 py-1 text-xs font-semibold text-[#507afe]">
+                          {item.step}
+                        </span>
+                        <h3 className="min-w-0 text-base font-semibold text-slate-900 sm:text-lg">
+                          {item.title}
+                        </h3>
+                      </div>
 
-                    <div className="min-w-0 max-w-full rounded-lg border border-[#507afe]/15 bg-linear-to-r from-[#507afe]/5 to-[#655ccf]/5 px-3 py-2.5">
-                      <pre className="overflow-x-auto whitespace-pre-wrap wrap-break-word font-mono text-xs leading-relaxed text-slate-800 sm:text-sm">
-                        <code className="whitespace-pre-wrap wrap-break-word">
-                          {item.code}
-                        </code>
-                      </pre>
-                    </div>
+                      <div className="min-w-0 max-w-full rounded-lg border border-[#507afe]/15 bg-linear-to-r from-[#507afe]/5 to-[#655ccf]/5 px-3 py-2.5">
+                        <pre className="overflow-x-auto whitespace-pre-wrap wrap-break-word font-mono text-xs leading-relaxed text-slate-800 sm:text-sm">
+                          <code className="whitespace-pre-wrap wrap-break-word">
+                            {item.code}
+                          </code>
+                        </pre>
+                      </div>
 
-                    <p className="text-sm leading-relaxed text-slate-600">
-                      {item.description}
-                    </p>
-                  </CardContent>
-                </Card>
+                      <p className="text-sm leading-relaxed text-slate-600">
+                        {item.description}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </RevealItem>
               ))}
-            </div>
+            </StaggerReveal>
           </div>
         </div>
       </div>

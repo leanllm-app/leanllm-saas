@@ -1,3 +1,5 @@
+import { FlickeringGrid } from '@kit/ui/flickering-grid';
+import { cn } from '@kit/ui/utils';
 import {
   ChartNoAxesCombinedIcon,
   DatabaseIcon,
@@ -5,47 +7,14 @@ import {
   GaugeIcon,
   Repeat2Icon,
   UsersIcon,
-  type LucideIcon,
 } from 'lucide-react';
+import { RevealItem, StaggerReveal } from './scroll-reveal';
 
-type OutcomeItem = {
-  icon: LucideIcon;
+type FeatureType = {
   title: string;
+  icon: React.ReactNode;
   description: string;
 };
-
-const outcomes: OutcomeItem[] = [
-  {
-    icon: FlameIcon,
-    title: 'See which feature is burning your budget',
-    description: 'Label every LLM call by feature. Instantly know what costs the most.',
-  },
-  {
-    icon: UsersIcon,
-    title: 'Find your most expensive users instantly',
-    description: 'Track cost per user. Identify power users skewing your spend.',
-  },
-  {
-    icon: Repeat2Icon,
-    title: 'Detect waste in retries and fallbacks',
-    description: 'Hidden retry logic inflates your bill. LeanLLM exposes it.',
-  },
-  {
-    icon: GaugeIcon,
-    title: 'Correlate cost with latency',
-    description: "Expensive doesn't always mean slow. Know which calls are both.",
-  },
-  {
-    icon: ChartNoAxesCombinedIcon,
-    title: 'Track model usage across your stack',
-    description: 'GPT-4o, Claude, Gemini - see costs by model in one place.',
-  },
-  {
-    icon: DatabaseIcon,
-    title: 'Export events. Query anything.',
-    description: 'Your data, your database. Run any SQL query you want.',
-  },
-];
 
 export function OutcomesSection() {
   return (
@@ -72,28 +41,88 @@ export function OutcomesSection() {
           not to look pretty on a dashboard.
         </p>
 
-        <div className="mt-8 grid gap-4 sm:mt-10 md:grid-cols-2 xl:grid-cols-3">
-          {outcomes.map((item) => (
-            <article
-              key={item.title}
-              className="group relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_12px_30px_-24px_rgba(80,122,254,0.55)] transition duration-200 hover:-translate-y-0.5 hover:border-[#507afe]/30 hover:shadow-[0_22px_44px_-26px_rgba(80,122,254,0.65)]"
-            >
-              <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-[#507afe]/60 to-transparent opacity-70" />
-              <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-linear-to-br from-[#507afe]/12 to-[#655ccf]/12 text-[#507afe] ring-1 ring-[#507afe]/20">
-                <item.icon className="size-5" />
-              </span>
-
-              <h3 className="mt-4 text-xl leading-tight font-semibold text-slate-900">
-                {item.title}
-              </h3>
-
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                {item.description}
-              </p>
-            </article>
+        <div className="mt-8 overflow-hidden rounded-lg border">
+        <StaggerReveal className="bg-border grid grid-cols-1 gap-px sm:grid-cols-2 md:grid-cols-3">
+          {features.map((feature) => (
+            <RevealItem key={feature.title}>
+              <FeatureCard feature={feature} />
+            </RevealItem>
           ))}
+        </StaggerReveal>
         </div>
       </div>
     </section>
   );
 }
+
+
+export function FeatureCard({
+  feature,
+  className,
+  ...props
+}: React.ComponentProps<'div'> & {
+  feature: FeatureType;
+}) {
+  return (
+    <div
+      className={cn('bg-background relative overflow-hidden p-6', className)}
+      {...props}
+    >
+      <div className="pointer-events-none absolute top-0 left-1/2 -mt-2 -ml-20 size-full mask-[radial-gradient(farthest-side_at_top,white,transparent)]">
+        <FlickeringGrid
+          className="relative inset-0 z-0 mask-[radial-gradient(450px_circle_at_center,white,transparent)]"
+          height={400}
+          width={400}
+          squareSize={4}
+          gridGap={6}
+          color="#507afe"
+          maxOpacity={0.5}
+          flickerChance={0.1}
+        />
+      </div>
+      <div className="[&_svg]:text-foreground/75 [&_svg]:size-7">
+        {feature.icon}
+      </div>
+      <h3 className="text-md md:text-md mt-6 font-semibold">{feature.title}</h3>
+      <p className="text-muted-foreground relative z-20 mt-2 text-sm font-light">
+        {feature.description}
+      </p>
+    </div>
+  );
+}
+
+const features: FeatureType[] = [
+  {
+    title: 'See which feature is burning your budget',
+    icon: <FlameIcon />,
+    description:
+      'Label every LLM call by feature. Instantly know what costs the most.',
+  },
+  {
+    title: 'Find your most expensive users instantly',
+    icon: <UsersIcon />,
+    description:
+      'Track cost per user. Identify power users skewing your spend.',
+  },
+  {
+    title: 'Detect waste in retries and fallbacks',
+    icon: <Repeat2Icon />,
+    description: 'Hidden retry logic inflates your bill. LeanLLM exposes it.',
+  },
+  {
+    title: 'Correlate cost with latency',
+    icon: <GaugeIcon />,
+    description:
+      "Expensive doesn't always mean slow. Know which calls are both.",
+  },
+  {
+    title: 'Track model usage across your stack',
+    icon: <ChartNoAxesCombinedIcon />,
+    description: 'GPT-4o, Claude, Gemini - see costs by model in one place.',
+  },
+  {
+    title: 'Export events. Query anything.',
+    icon: <DatabaseIcon />,
+    description: 'Your data, your database. Run any SQL query you want.',
+  },
+];

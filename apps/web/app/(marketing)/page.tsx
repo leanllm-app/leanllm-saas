@@ -17,6 +17,7 @@ import { OutcomesSection } from './_components/lp/outcomes-section';
 import { ProblemSection } from './_components/lp/problem-section';
 import { SolutionSection } from './_components/lp/solution-section';
 import { WhyLeanLLMSection } from './_components/lp/why-leanllm-section';
+import { PricingSection } from './_components/lp/pricing-section';
 
 function Home() {
   return (
@@ -27,6 +28,7 @@ function Home() {
       <HowItWorksSection />
       <DeveloperExperienceSection />
       <OutcomesSection />
+      <PricingSection />
       <WhyLeanLLMSection />
       <OpenSourceSaasSection />
       <FinalCtaSection />
