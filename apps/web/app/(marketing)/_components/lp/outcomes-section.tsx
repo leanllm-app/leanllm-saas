@@ -56,7 +56,7 @@ export function OutcomesSection() {
       />
 
       <div className="mx-auto max-w-6xl">
-        <p className="text-center text-xs font-semibold tracking-[0.18em] text-[#655ccf] uppercase">
+        <p className="mx-auto w-fit rounded-md border border-[#655ccf]/20 bg-[#655ccf]/8 px-3 py-1 text-center text-xs font-semibold tracking-[0.14em] text-[#655ccf] uppercase">
           Outcomes
         </p>
 
