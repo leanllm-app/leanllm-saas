@@ -1,0 +1,31 @@
+---
+title: "LeanLLM SDK"
+description: "Observability layer for LLM calls — interception, replay, lineage, cost tracking."
+publishedAt: 2026-04-28
+order: 5
+status: "published"
+---
+
+LeanLLM is a Python SDK that wraps any provider call routed through [LiteLLM](https://github.com/BerriAI/litellm) and emits a structured `LLMEvent` per call: prompt, response, parameters, tokens, cost, latency, lineage, labels. Events are persisted asynchronously through a worker thread, so the request path is never blocked.
+
+This section covers how to install the SDK, configure persistence, and use each feature.
+
+## Getting started
+
+- [Installation](/docs/leanllm/installation)
+- [Quick start](/docs/leanllm/quick-start)
+- [Configuration](/docs/leanllm/configuration)
+
+## Features
+
+- [Request interception](/docs/leanllm/interception)
+- [Context propagation](/docs/leanllm/context)
+- [Semantic normalization](/docs/leanllm/normalization)
+- [Deterministic replay](/docs/leanllm/replay)
+- [Lineage & execution graph](/docs/leanllm/lineage)
+- [Cost & token tracking](/docs/leanllm/cost)
+- [Privacy & redaction](/docs/leanllm/redaction)
+- [Storage query API](/docs/leanllm/storage-query)
+- [CLI](/docs/leanllm/cli)
+- [Runtime toggles & sampling](/docs/leanllm/runtime-toggles)
+- [DX helpers](/docs/leanllm/dx-helpers)

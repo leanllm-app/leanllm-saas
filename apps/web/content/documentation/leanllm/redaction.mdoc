@@ -1,0 +1,126 @@
+---
+title: "Privacy & Redaction"
+description: "Three modes for handling prompt and response content: metadata-only, masked, or full capture."
+publishedAt: 2026-04-28
+order: 70
+status: "published"
+---
+
+## What it does
+
+`RedactionMode` controls whether prompt and response text are stored on the event:
+
+- `metadata` (default) — prompt and response are **never stored**. Tokens, cost, latency, and labels are still captured.
+- `redacted` — prompt and response are stored after applying built-in masks (emails, phones, CPF/SSN-style IDs) plus any `custom_patterns`.
+- `full` — prompt and response are stored verbatim.
+
+Redaction runs synchronously on the request thread, so it has to be cheap. The patterns are compiled once at module load.
+
+## When to use
+
+- **`metadata`** — production by default. You get full observability without storing user content.
+- **`redacted`** — staging or low-risk prod where you want sample content for debugging but not raw PII.
+- **`full`** — local dev, replay scenarios, or when content is already non-sensitive (system prompts, internal eval suites).
+
+## API
+
+Re-exported from `leanllm.redaction`:
+
+- `RedactionMode` — enum.
+- `RedactionPolicy` — Pydantic model carrying the policy shape.
+- `apply(*, policy, text)` — pure function that masks `text` according to `policy`.
+
+### Signatures
+
+```python
+class RedactionMode(str, Enum):
+    FULL = "full"
+    REDACTED = "redacted"
+    METADATA_ONLY = "metadata"
+
+class RedactionPolicy(BaseModel):
+    mode: RedactionMode = RedactionMode.METADATA_ONLY
+    redact_emails: bool = True
+    redact_phones: bool = True
+    redact_ids: bool = True            # CPF / SSN
+    custom_patterns: list[str] = []
+    exclude_prompt: bool = False
+    exclude_response: bool = False
+
+def apply(*, policy: RedactionPolicy, text: str | None) -> str | None: ...
+```
+
+## Examples
+
+### Choose a redaction mode
+
+```python
+from leanllm import LeanLLM, LeanLLMConfig
+from leanllm.redaction import RedactionMode
+
+client = LeanLLM(
+    api_key="sk-...",
+    config=LeanLLMConfig(
+        database_url="sqlite:///events.db",
+        capture_content=True,
+        redaction_mode=RedactionMode.REDACTED,
+    ),
+)
+
+client.chat(
+    model="gpt-4o-mini",
+    messages=[{"role": "user", "content": "Email me at user@example.com"}],
+)
+event = client.last_event
+print(event.prompt)     # "...Email me at [EMAIL]..."
+```
+
+### Per-call override
+
+```python
+from leanllm.redaction import RedactionMode
+
+client.chat(
+    model="gpt-4o-mini",
+    messages=[{"role": "user", "content": "system prompt — safe to log"}],
+    redaction_mode=RedactionMode.FULL,
+)
+# This call stores prompt/response verbatim, regardless of the global mode.
+```
+
+### Add a custom pattern
+
+```python
+from leanllm.redaction import RedactionPolicy, RedactionMode, apply
+
+policy = RedactionPolicy(
+    mode=RedactionMode.REDACTED,
+    custom_patterns=[r"sk-[A-Za-z0-9]{20,}"],
+)
+print(apply(policy=policy, text="My key is sk-abcdef1234567890abcdef"))
+# → "My key is [REDACTED]"
+```
+
+The client uses the global `RedactionPolicy(mode=...)`. Custom patterns require building your own policy and using `apply()` directly, or extending the client to accept a full `RedactionPolicy`.
+
+## Configuration
+
+| Field | Env var | Default | What it does |
+|---|---|---|---|
+| `capture_content` | `LEANLLM_CAPTURE_CONTENT` | `false` | Master switch; if false, no prompt/response is stored regardless of mode. |
+| `redaction_mode` | `LEANLLM_REDACTION_MODE` | `metadata` | `metadata` / `redacted` / `full`. |
+
+`LEANLLM_REDACTION_MODE` accepts `metadata`, `redacted`, or `full`. Invalid values fall back to `metadata`.
+
+## Edge cases & gotchas
+
+- **`metadata` returns `None`.** When `apply()` is called with `RedactionMode.METADATA_ONLY`, it returns `None` even if the input text is non-empty. The event's `prompt` and `response` end up `None`.
+- **Built-in patterns are tuned for Brazilian + US PII.** CPF (Brazilian tax ID) and US SSN are covered; other national ID formats need `custom_patterns`.
+- **Phone matcher is broad.** It catches Brazilian and many international shapes — if your text has long digit runs that aren't phones, expect false positives. Disable with `redact_phones=False`.
+- **Custom patterns that fail to compile are silently skipped** (`re.error` is swallowed). Test your regex before relying on it.
+- **Per-call `redaction_mode=` wins over config.** This is the precedence rule documented in [runtime toggles](/docs/leanllm/runtime-toggles).
+
+## See also
+
+- [Configuration](/docs/leanllm/configuration)
+- [Runtime toggles](/docs/leanllm/runtime-toggles)

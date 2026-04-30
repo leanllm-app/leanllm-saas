@@ -1,0 +1,135 @@
+---
+title: "Runtime Toggles & Sampling"
+description: "Per-call overrides for log, sample, and redaction; producer-side sampling that respects errors."
+publishedAt: 2026-04-28
+order: 100
+status: "published"
+---
+
+## What it does
+
+Three keyword-only overrides on `chat()` / `completion()` change behavior on a single call without rebuilding the client:
+
+- `log=False` — hard bypass. Skips event construction, hooks, queue, persistence. The call becomes a pure pass-through to LiteLLM.
+- `sample=<float>` — per-call sampling rate (0.0–1.0). Overrides the global `sampling_rate`.
+- `redaction_mode=<RedactionMode>` — per-call redaction override.
+
+Sampling is **producer-side**: a single `random.random()` decides whether to build the event at all, before any I/O. Sampled-out calls cost almost nothing. **Errors always emit** regardless of sampling — operational signal isn't dropped by load-shedding.
+
+## When to use
+
+- High-volume endpoints where 100% capture is too much: set a global `sampling_rate=0.1` and bump it back to `1.0` for specific high-value calls via `sample=`.
+- Health checks and readiness probes: set `log=False` so they don't pollute your event store.
+- Sensitive paths where the global mode is `metadata` but a specific debug call needs `full` capture (or vice versa).
+
+## API
+
+Per-call kwargs on `chat()` / `completion()`:
+
+```python
+client.chat(
+    model: str,
+    messages: list[dict[str, str]],
+    *,
+    log: bool = True,
+    sample: float | None = None,
+    redaction_mode: RedactionMode | None = None,
+    ...
+)
+```
+
+Plus the global toggles on `LeanLLMConfig`:
+
+```python
+LeanLLMConfig(
+    sampling_rate=1.0,         # 0.0..1.0, errors bypass
+    environment=None,          # mirrored to event.metadata["environment"]
+    debug=False,               # DEBUG logs + per-event stderr summary
+    redaction_mode=RedactionMode.METADATA_ONLY,
+)
+```
+
+## Examples
+
+### Hard bypass for a health check
+
+```python
+client.chat(
+    model="gpt-4o-mini",
+    messages=[{"role": "user", "content": "ping"}],
+    log=False,
+)
+# No event built, no hooks fired. Pure pass-through.
+```
+
+### Sample 10% globally, force-keep one call
+
+```python
+from leanllm import LeanLLM, LeanLLMConfig
+
+client = LeanLLM(
+    api_key="sk-...",
+    config=LeanLLMConfig(database_url="sqlite:///events.db", sampling_rate=0.1),
+)
+
+# 90% of these get sampled out
+for prompt in stream_of_prompts:
+    client.chat(model="gpt-4o-mini", messages=[{"role": "user", "content": prompt}])
+
+# This one always lands
+client.chat(
+    model="gpt-4o-mini",
+    messages=[{"role": "user", "content": "evaluation case 42"}],
+    sample=1.0,
+    labels={"eval": "case-42"},
+)
+```
+
+### Per-call redaction override
+
+```python
+from leanllm.redaction import RedactionMode
+
+client.chat(
+    model="gpt-4o-mini",
+    messages=[{"role": "user", "content": "internal system prompt"}],
+    redaction_mode=RedactionMode.FULL,
+)
+# This call stores prompt/response verbatim regardless of config.redaction_mode.
+```
+
+### Debug mode (per-event stderr summaries)
+
+```python
+from leanllm import LeanLLM, LeanLLMConfig
+
+client = LeanLLM(
+    api_key="sk-...",
+    config=LeanLLMConfig(database_url="sqlite:///events.db", debug=True),
+)
+client.chat(model="gpt-4o-mini", messages=[{"role": "user", "content": "hi"}])
+# stderr: [2026-04-28 12:34:56] gpt-4o-mini tokens=5/4 cost=$0.0000 latency=312ms
+```
+
+## Configuration
+
+| Field | Env var | Default | What it does |
+|---|---|---|---|
+| `sampling_rate` | `LEANLLM_SAMPLING_RATE` | `1.0` | Default sampling rate (0.0–1.0). |
+| `environment` | `LEANLLM_ENVIRONMENT` | `None` | Default `event.metadata["environment"]`. Per-call context wins. |
+| `debug` | `LEANLLM_DEBUG` | `false` | DEBUG log level + per-event stderr summary. |
+| `redaction_mode` | `LEANLLM_REDACTION_MODE` | `metadata` | Default redaction; per-call override wins. |
+
+## Edge cases & gotchas
+
+- **`log=False` is total bypass.** No `pre_call_hook`, no `post_call_hook`, no event in the in-memory ring buffer. Use it deliberately.
+- **Errors bypass sampling.** Even with `sampling_rate=0.0`, an error event is still built and emitted. `error_hook` always fires too.
+- **`pre_call_hook` fires on sampled-out calls.** Sampling controls persistence, not observability — your pre-call inspection still runs.
+- **Auto-chain doesn't advance on sampled-out events.** Because `_enqueue` isn't called for sampled-out successes, `auto_chain` may produce gaps where `parent_request_id` points to events that weren't persisted.
+- **Per-call > ambient context > config.** The precedence rule applies to `redaction_mode`, `environment`, and tracing IDs.
+
+## See also
+
+- [Configuration](/docs/leanllm/configuration)
+- [Privacy & redaction](/docs/leanllm/redaction)
+- [DX helpers](/docs/leanllm/dx-helpers) — `auto_chain`, `last_event_buffer`.

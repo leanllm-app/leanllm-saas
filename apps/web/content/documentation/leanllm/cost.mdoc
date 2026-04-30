@@ -1,0 +1,103 @@
+---
+title: "Cost & Token Tracking"
+description: "USD cost computed from a built-in pricing table; token estimates when the provider doesn't return usage."
+publishedAt: 2026-04-28
+order: 60
+status: "published"
+---
+
+## What it does
+
+Every `LLMEvent` carries `input_tokens`, `output_tokens`, `total_tokens`, and `cost` in USD. Tokens come from the provider's `usage` block when available; otherwise LeanLLM estimates them with `tiktoken` (falling back to `len(text) // 4` if `tiktoken` isn't installed). Cost is computed from a built-in pricing table by `CostCalculator`.
+
+The pricing resolver supports prefix matching, so `gpt-4o-2024-08-06` resolves to `gpt-4o` automatically and `openai/gpt-4o` strips the provider prefix before lookup.
+
+## When to use
+
+- You want a USD cost on every captured event without integrating a separate billing service.
+- You want to add custom or in-house model pricing (fine-tunes, on-prem deployments).
+- You want approximate token counts when the provider's response omits `usage`.
+
+## API
+
+Public helpers live under `leanllm.events.cost`:
+
+- `CostCalculator(custom_pricing=None)` — class with a `.calculate(model, input_tokens, output_tokens)` method.
+- `extract_provider(model)` — infer the provider name from a LiteLLM model string.
+- `estimate_tokens(text, model="gpt-4o")` — best-effort token count.
+
+The client builds its own `CostCalculator` internally; you typically read `event.cost` rather than calling the calculator yourself. Custom pricing is most useful in tests and offline cost analysis.
+
+### Signatures
+
+```python
+class CostCalculator:
+    def __init__(self, custom_pricing: dict[str, tuple[float, float]] | None = None): ...
+    def calculate(self, model: str, input_tokens: int, output_tokens: int) -> float: ...
+
+def extract_provider(model: str) -> str: ...
+def estimate_tokens(text: str, model: str = "gpt-4o") -> int: ...
+```
+
+`custom_pricing` maps a model key to `(input_usd_per_1M_tokens, output_usd_per_1M_tokens)`.
+
+## Examples
+
+### Read cost off the captured event
+
+```python
+from leanllm import LeanLLM, LeanLLMConfig
+
+client = LeanLLM(
+    api_key="sk-...",
+    config=LeanLLMConfig(database_url="sqlite:///events.db"),
+)
+
+response = client.chat(
+    model="gpt-4o-mini",
+    messages=[{"role": "user", "content": "Hello"}],
+)
+event = client.last_event
+print(f"${event.cost:.6f} for {event.total_tokens} tokens on {event.model}")
+```
+
+### Add custom pricing
+
+```python
+from leanllm.events.cost import CostCalculator
+
+calc = CostCalculator(custom_pricing={
+    "internal-llm-7b": (0.10, 0.20),       # $0.10/$0.20 per 1M input/output
+})
+print(calc.calculate("internal-llm-7b", 12_000, 8_000))
+```
+
+### Estimate tokens for a string
+
+```python
+from leanllm.events.cost import estimate_tokens
+
+print(estimate_tokens("hello world", model="gpt-4o-mini"))
+```
+
+## Pricing table (built-in)
+
+The pricing table covers OpenAI (`gpt-4o`, `gpt-4o-mini`, `gpt-4-turbo`, `gpt-4`, `gpt-3.5-turbo`, `o1`, `o1-mini`, `o3-mini`), Anthropic (Claude 3 / 3.5 / 4 family), Google Gemini 1.5/2.0, and Mistral large/small. See `leanllm/events/cost.py` (`_PRICING`) for the exact values.
+
+When a model isn't in the table — including no prefix match — `cost` is `0.0` and a debug log is emitted.
+
+## Configuration
+
+Cost tracking has no runtime knobs; it's always on. To extend the pricing table, build your own `CostCalculator` with `custom_pricing=`. Adding entries to the built-in table requires editing `leanllm/events/cost.py:_PRICING` and a new release.
+
+## Edge cases & gotchas
+
+- **Missing `usage` block.** If the provider returns no `usage`, LeanLLM estimates tokens from the text. The estimate is approximate — treat values as advisory, not billing-grade.
+- **Unknown model = 0 cost.** No exception, no warning beyond debug. Add custom pricing or extend the table for in-house models.
+- **Prefix match is greedy.** `gpt-4o-mini-2024-07-18` resolves to `gpt-4o-mini`, but `gpt-4o-2024-08-06` resolves to `gpt-4o` — both intended. If you have a model whose name conflicts with a prefix, supply a `custom_pricing` entry so exact match wins.
+- **`tiktoken` is optional.** Without it, the estimator falls back to `len(text) // 4`, a coarse proxy.
+
+## See also
+
+- [Storage query API](/docs/leanllm/storage-query) — query by model, sum cost.
+- [Lineage](/docs/leanllm/lineage) — `subtree_cost` rolls up across a flow.

@@ -1,0 +1,140 @@
+---
+title: "DX Helpers"
+description: "Module-level init, last-event ring buffer, pretty printers, auto-chain, and trace helpers."
+publishedAt: 2026-04-28
+order: 110
+status: "published"
+---
+
+## What it does
+
+LeanLLM ships a handful of ergonomics helpers for scripts, notebooks, and ad-hoc debugging:
+
+- **Module-level singleton.** `leanllm.init(...)` builds a process-wide default client; `leanllm.chat(...)`, `leanllm.completion(...)`, `leanllm.shutdown()` route to it.
+- **In-memory ring buffer.** `client.last_event` and `client.recent_events(n=...)` give you the most recent events in this process — no DB round-trip.
+- **Pretty printers.** `LLMEvent.summary()` (one-liner) and `LLMEvent.pretty_print()` (sectioned view with optional content truncation). Same shape for `ReplayResult`.
+- **Auto-chain.** `config.auto_chain=True` auto-fills `parent_request_id` with the previous emitted event in the same task. `trace()` resets the chain.
+- **Delivery health counters.** `client.dropped_events_count` and `client.events_in_flight` are read-only and safe to poll.
+
+## When to use
+
+- Notebooks: `leanllm.init(api_key="...")` + `leanllm.chat(...)` keeps the cell short.
+- Live debugging: `client.last_event.pretty_print()` after a failing call shows everything inline.
+- Multi-step agents: `auto_chain=True` removes the need to pass `parent_request_id` manually.
+- Ops dashboards: poll `dropped_events_count` and `events_in_flight` to alert on backpressure.
+
+## API
+
+Module-level helpers (re-exported from `leanllm`):
+
+```python
+def init(api_key: str = "", config: LeanLLMConfig | None = None, **kwargs) -> LeanLLM: ...
+def get_default_client() -> LeanLLM | None: ...
+def shutdown() -> None: ...
+def chat(*args, **kwargs) -> Any: ...
+def completion(*args, **kwargs) -> Any: ...
+```
+
+`init()` is **idempotent** — subsequent calls return the same client. To rebuild, call `shutdown()` first.
+
+Client members:
+
+```python
+client.last_event             # LLMEvent | None
+client.recent_events(n=8)     # list[LLMEvent]
+client.dropped_events_count   # int — queue + worker drops
+client.events_in_flight       # int — buffered + retrying
+```
+
+`LLMEvent` and `ReplayResult` both implement `.summary() -> str` and `.pretty_print(file=None)`.
+
+## Examples
+
+### Notebook flow
+
+```python
+import leanllm
+
+leanllm.init(api_key="sk-...")
+response = leanllm.chat(
+    model="gpt-4o-mini",
+    messages=[{"role": "user", "content": "Hello"}],
+)
+leanllm.get_default_client().last_event.pretty_print()
+leanllm.shutdown()
+```
+
+### Last-event inspection
+
+```python
+from leanllm import LeanLLM, LeanLLMConfig
+
+client = LeanLLM(
+    api_key="sk-...",
+    config=LeanLLMConfig(last_event_buffer=64),
+)
+client.chat(model="gpt-4o-mini", messages=[{"role": "user", "content": "x"}])
+
+print(client.last_event.summary())
+for ev in client.recent_events(n=10):
+    print(ev.event_id, ev.cost)
+```
+
+### Auto-chain across an agent loop
+
+```python
+import uuid
+from leanllm import LeanLLM, LeanLLMConfig, trace
+
+client = LeanLLM(
+    api_key="sk-...",
+    config=LeanLLMConfig(database_url="sqlite:///events.db", auto_chain=True),
+)
+
+with trace(correlation_id=f"agent-{uuid.uuid4()}"):
+    plan = client.chat(model="gpt-4o-mini", messages=[{"role": "user", "content": "Plan."}])
+    step1 = client.chat(model="gpt-4o-mini", messages=[{"role": "user", "content": "Step 1."}])
+    step2 = client.chat(model="gpt-4o-mini", messages=[{"role": "user", "content": "Step 2."}])
+# The events for step1 and step2 carry parent_request_id pointing at the
+# previous emitted event_id, automatically.
+```
+
+### Monitor delivery health
+
+```python
+import time
+from leanllm import LeanLLM, LeanLLMConfig
+
+client = LeanLLM(
+    api_key="sk-...",
+    config=LeanLLMConfig(database_url="sqlite:///events.db"),
+)
+
+# ... emit a bunch of events ...
+
+while client.events_in_flight > 0:
+    print("in flight:", client.events_in_flight,
+          "dropped:", client.dropped_events_count)
+    time.sleep(1)
+```
+
+## Configuration
+
+| Field | Env var | Default | What it does |
+|---|---|---|---|
+| `last_event_buffer` | `LEANLLM_LAST_EVENT_BUFFER` | `32` | Ring buffer size for `last_event` / `recent_events`. `0` disables. |
+| `auto_chain` | `LEANLLM_AUTO_CHAIN` | `false` | Auto-fill `parent_request_id` with the last emitted event in the same task. |
+
+## Edge cases & gotchas
+
+- **`init()` is idempotent.** A second call returns the existing client; `**kwargs` on the second call are ignored. Call `shutdown()` first to rebuild.
+- **`last_event` is process-local.** It's a `collections.deque` of `LLMEvent`s — not shared across processes, not durable.
+- **Auto-chain advances only on emitted events.** Sampled-out events don't advance the chain — see [runtime toggles](/docs/leanllm/runtime-toggles) for the consequence.
+- **`trace()` resets the auto-chain pointer.** Entering a trace scope means a new chain starts from the first call inside.
+- **Ring buffer of size 0 disables `last_event`.** Both `last_event` and `recent_events()` return `None` / `[]` when `last_event_buffer=0`.
+
+## See also
+
+- [Configuration](/docs/leanllm/configuration)
+- [Context propagation](/docs/leanllm/context)
+- [Runtime toggles](/docs/leanllm/runtime-toggles)
