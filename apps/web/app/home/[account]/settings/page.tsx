@@ -1,78 +1,12 @@
-import { getSupabaseServerClient } from '@kit/supabase/server-client';
-import { createTeamAccountsApi } from '@kit/team-accounts/api';
-import { TeamAccountSettingsContainer } from '@kit/team-accounts/components';
-import { AppBreadcrumbs } from '@kit/ui/app-breadcrumbs';
-import { PageBody } from '@kit/ui/page';
-import { Trans } from '@kit/ui/trans';
-
-import featuresFlagConfig from '~/config/feature-flags.config';
-import pathsConfig from '~/config/paths.config';
-import { createI18nServerInstance } from '~/lib/i18n/i18n.server';
-
-import { TeamAccountLayoutPageHeader } from '../_components/team-account-layout-page-header';
-import { createApiKeysService } from '../api-keys/_lib/server/api-keys.service';
-import { IntegrationGuide } from './_lib/components/integration-guide';
-
-export const generateMetadata = async () => {
-  const i18n = await createI18nServerInstance();
-  const title = i18n.t('teams:settings:pageTitle');
-
-  return {
-    title,
-  };
-};
+import { redirect } from 'next/navigation';
 
 interface TeamAccountSettingsPageProps {
   params: Promise<{ account: string }>;
 }
 
-const paths = {
-  teamAccountSettings: pathsConfig.app.accountSettings,
-};
-
 async function TeamAccountSettingsPage(props: TeamAccountSettingsPageProps) {
-  const client = getSupabaseServerClient();
-  const api = createTeamAccountsApi(client);
   const slug = (await props.params).account;
-  const data = await api.getTeamAccount(slug);
-
-  const account = {
-    id: data.id,
-    name: data.name,
-    pictureUrl: data.picture_url,
-    slug: data.slug as string,
-    primaryOwnerUserId: data.primary_owner_user_id,
-  };
-
-  const features = {
-    enableTeamDeletion: featuresFlagConfig.enableTeamDeletion,
-  };
-
-  const apiKeysService = createApiKeysService(client);
-  const apiKeys = await apiKeysService.listByAccount(account.id);
-  const firstActiveKey = apiKeys.find((k) => k.is_active);
-
-  return (
-    <>
-      <TeamAccountLayoutPageHeader
-        account={account.slug}
-        title={<Trans i18nKey={'teams:settings.pageTitle'} />}
-        description={<AppBreadcrumbs />}
-      />
-
-      <PageBody>
-        <div className={'flex max-w-2xl flex-1 flex-col space-y-6'}>
-          <IntegrationGuide apiKeyPrefix={firstActiveKey?.key_prefix} />
-
-          <TeamAccountSettingsContainer
-            account={account}
-            paths={paths}
-            features={features}
-          />
-        </div>
-      </PageBody>
-    </>
-  );
+  redirect(`/home/${slug}/settings/company`);
 }
 
 export default TeamAccountSettingsPage;

@@ -1,18 +1,13 @@
-import {
-  CreditCard,
-  Key,
-  LayoutDashboard,
-  List,
-  Settings,
-  Users,
-} from 'lucide-react';
+import { Key, Widget5, Chart, Settings } from '@solar-icons/react/ssr'
+
 
 import { NavigationConfigSchema } from '@kit/ui/navigation-schema';
 
-import featureFlagsConfig from '~/config/feature-flags.config';
 import pathsConfig from '~/config/paths.config';
 
 const iconClasses = 'w-4';
+const iconColor = '#655ccf';
+const iconSize = 28;
 
 const getRoutes = (account: string) => [
   {
@@ -21,18 +16,18 @@ const getRoutes = (account: string) => [
       {
         label: 'common:routes.dashboard',
         path: pathsConfig.app.accountHome.replace('[account]', account),
-        Icon: <LayoutDashboard className={iconClasses} />,
+        Icon: <Widget5 weight='BoldDuotone' size={iconSize} color={iconColor}/>,
         end: true,
       },
       {
         label: 'common:routes.apiKeys',
         path: createPath(pathsConfig.app.accountApiKeys, account),
-        Icon: <Key className={iconClasses} />,
+        Icon: <Key weight='BoldDuotone' size={iconSize} color={iconColor} />,
       },
       {
         label: 'common:routes.usage',
         path: createPath(pathsConfig.app.accountUsage, account),
-        Icon: <List className={iconClasses} />,
+        Icon: <Chart weight='BoldDuotone' size={iconSize} color={iconColor} />,
       },
     ],
   },
@@ -43,21 +38,9 @@ const getRoutes = (account: string) => [
       {
         label: 'common:routes.settings',
         path: createPath(pathsConfig.app.accountSettings, account),
-        Icon: <Settings className={iconClasses} />,
+        Icon: <Settings weight='BoldDuotone' size={iconSize} color={iconColor} />,
       },
-      {
-        label: 'common:routes.members',
-        path: createPath(pathsConfig.app.accountMembers, account),
-        Icon: <Users className={iconClasses} />,
-      },
-      featureFlagsConfig.enableTeamAccountBilling
-        ? {
-            label: 'common:routes.billing',
-            path: createPath(pathsConfig.app.accountBilling, account),
-            Icon: <CreditCard className={iconClasses} />,
-          }
-        : undefined,
-    ].filter(Boolean),
+    ],
   },
 ];
 

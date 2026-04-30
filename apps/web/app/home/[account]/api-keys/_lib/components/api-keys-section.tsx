@@ -15,6 +15,8 @@ export function ApiKeysSection(props: {
     queryKey: apiKeysQueryKey(props.accountId),
     queryFn: () => listApiKeysAction({ accountId: props.accountId }),
     initialData: props.initialData,
+    staleTime: 30_000,
+    gcTime: 10 * 60_000,
   });
 
   if (isError) {

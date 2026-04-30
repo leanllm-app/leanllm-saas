@@ -1,4 +1,5 @@
 import withBundleAnalyzer from '@next/bundle-analyzer';
+import { createMDX } from 'fumadocs-mdx/next';
 
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -73,9 +74,13 @@ const config = {
   typescript: { ignoreBuildErrors: true },
 };
 
-export default withBundleAnalyzer({
-  enabled: process.env.ANALYZE === 'true',
-})(config);
+const withMDX = createMDX();
+
+export default withMDX(
+  withBundleAnalyzer({
+    enabled: process.env.ANALYZE === 'true',
+  })(config),
+);
 
 /** @returns {import('next').NextConfig['images']} */
 function getImagesConfig() {

@@ -1,0 +1,124 @@
+---
+title: "CLI"
+description: "List, inspect, and replay captured events from the shell."
+publishedAt: 2026-04-28
+order: 90
+status: "published"
+---
+
+## What it does
+
+Installing `leanllm-ai` registers a `leanllm` console script with four subcommands:
+
+- `leanllm migrate` — run / inspect Alembic migrations on the Postgres backend.
+- `leanllm logs` — list events as a table or JSONL.
+- `leanllm show <event_id>` — pretty-print one event.
+- `leanllm replay <event_id>` — re-run a stored event through the live LLM and diff the result.
+
+The CLI talks to a **local backend only** — it reads `LEANLLM_DATABASE_URL` (Postgres or SQLite). It does not call the SaaS.
+
+## When to use
+
+- Triage: spot-check the most recent N events without writing Python.
+- Debug: replay a specific failing event with a temperature override.
+- Regression: replay a batch of historical event IDs from a file.
+- Deploy: run `leanllm migrate up` to apply pending Postgres migrations.
+
+## Commands
+
+### `leanllm logs`
+
+```
+leanllm logs [--url URL]
+             [--limit N] [--offset N]
+             [--correlation-id ID] [--model M]
+             [--since T] [--until T]
+             [--errors-only]
+             [--format table|json]
+```
+
+`--since` / `--until` accept ISO-8601 (`2026-04-27`, `2026-04-27T10:00:00`) or relative shorthands (`1h`, `30m`, `2d`).
+
+### `leanllm show`
+
+```
+leanllm show <event_id> [--url URL] [--pretty]
+```
+
+Default is a one-line summary. `--pretty` calls `LLMEvent.pretty_print()` for the full sectioned view (prompt, response, tool calls, error block).
+
+### `leanllm replay`
+
+```
+leanllm replay <event_id> [--url URL]
+               [--model M] [--temperature T]
+               [--print-diff]
+leanllm replay --batch <file> [...]
+```
+
+`--batch` reads one event ID per line (lines starting with `#` are ignored). Outputs one summary per replay plus a final aggregate line (`replays`, `errors`, `text_diffs`, `total_token_delta`, `total_latency_delta`).
+
+The replay client runs with `enable_persistence=False` so the new event is **not** stored a second time.
+
+### `leanllm migrate`
+
+Runs Alembic against the Postgres backend (`up`, `down`, `current`, `history`).
+
+## Examples
+
+### Tail recent events
+
+```bash
+export LEANLLM_DATABASE_URL=sqlite:///events.db
+leanllm logs --limit 20
+```
+
+### Filter to errors in the last hour
+
+```bash
+leanllm logs --errors-only --since 1h --format json
+```
+
+### Replay one event with `temperature=0`
+
+```bash
+leanllm replay 7e2a-... --temperature 0.0 --print-diff
+```
+
+### Batch replay
+
+```bash
+echo "7e2a-..." > ids.txt
+echo "# regression candidates" >> ids.txt
+echo "8b13-..." >> ids.txt
+leanllm replay --batch ids.txt
+```
+
+### Run pending Postgres migrations
+
+```bash
+export LEANLLM_DATABASE_URL=postgresql+asyncpg://user:pass@host/db
+leanllm migrate up
+```
+
+## Configuration
+
+The CLI reuses the same env vars as the SDK:
+
+| Env var | Used by | What it does |
+|---|---|---|
+| `LEANLLM_DATABASE_URL` | all subcommands | Backend URL (Postgres or SQLite). `--url` overrides per call. |
+| `OPENAI_API_KEY` (or other provider env) | `replay` | LiteLLM picks the right provider key based on the model. |
+| `LEANLLM_LOG_LEVEL` | all | Log level for the CLI itself (default `INFO`). |
+
+## Edge cases & gotchas
+
+- **`logs` returns events ordered DESC by `timestamp`.** `--offset` paginates within that order.
+- **`show` and `replay` need a `LEANLLM_DATABASE_URL`.** They will not call the remote SaaS; the remote backend is write-only from the SDK.
+- **Replay needs the prompt to be stored.** If the original event was captured with `redaction_mode=metadata`, replay fails because there's no prompt JSON. Pass `--batch` events captured with `capture_content=True`.
+- **`--batch` mode aggregates exit code.** Returns `0` if all replays succeed, `1` if any failed (per-item failures show as `error_message` in the per-line summary).
+
+## See also
+
+- [Storage query API](/docs-v2/leanllm/storage-query) — same filters as Python.
+- [Replay](/docs-v2/leanllm/replay) — programmatic counterpart.

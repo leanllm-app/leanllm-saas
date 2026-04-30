@@ -127,4 +127,65 @@ class DashboardService {
       }))
       .sort((a, b) => b.cost - a.cost);
   }
+
+  async getCostPer1kTokensByModel(accountId: string, since: string, until: string) {
+    const { data, error } = await this.client
+      .from('events')
+      .select('model, cost_usd, total_tokens')
+      .eq('account_id', accountId)
+      .gte('timestamp', since)
+      .lte('timestamp', until);
+
+    if (error) {
+      throw error;
+    }
+
+    const modelMap = new Map<string, { cost: number; tokens: number }>();
+
+    for (const event of data ?? []) {
+      const model = event.model ?? 'unknown';
+      const current = modelMap.get(model) ?? { cost: 0, tokens: 0 };
+
+      modelMap.set(model, {
+        cost: current.cost + (event.cost_usd ?? 0),
+        tokens: current.tokens + (event.total_tokens ?? 0),
+      });
+    }
+
+    return Array.from(modelMap.entries())
+      .map(([model, values]) => ({
+        model,
+        costPer1kTokens:
+          values.tokens > 0
+            ? Math.round(((values.cost / values.tokens) * 1000) * 10000) / 10000
+            : 0,
+      }))
+      .filter((item) => item.costPer1kTokens > 0)
+      .sort((a, b) => b.costPer1kTokens - a.costPer1kTokens)
+      .slice(0, 8);
+  }
+
+  async getLatencyVsCost(accountId: string, since: string, until: string) {
+    const { data, error } = await this.client
+      .from('events')
+      .select('model, cost_usd, latency_ms, total_tokens')
+      .eq('account_id', accountId)
+      .gte('timestamp', since)
+      .lte('timestamp', until)
+      .order('timestamp', { ascending: false })
+      .limit(400);
+
+    if (error) {
+      throw error;
+    }
+
+    return (data ?? [])
+      .filter((event) => (event.cost_usd ?? 0) > 0 && (event.latency_ms ?? 0) > 0)
+      .map((event) => ({
+        model: event.model ?? 'unknown',
+        cost: Math.round((event.cost_usd ?? 0) * 100000) / 100000,
+        latency: Math.round(event.latency_ms ?? 0),
+        tokens: event.total_tokens ?? 0,
+      }));
+  }
 }

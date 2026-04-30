@@ -11,11 +11,13 @@ export function DocsCard({
   link: { url: string; label?: string };
 }>) {
   return (
-    <Link href={link.url} className="flex flex-col">
+    <Link href={link.url} className="group flex h-full flex-col">
       <div
-        className={`hover:bg-muted/70 flex grow flex-col gap-y-0.5 rounded border p-4`}
+        className={
+          'hover:bg-muted/60 hover:border-primary/30 hover:shadow-sm flex h-full grow flex-col gap-y-1 rounded-xl border p-4 transition-all'
+        }
       >
-        <h3 className="mt-0 text-lg font-medium hover:underline dark:text-white">
+        <h3 className="group-hover:text-primary mt-0 text-lg font-medium transition-colors dark:text-white">
           {title}
         </h3>
 

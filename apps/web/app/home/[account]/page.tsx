@@ -15,11 +15,8 @@ import { Trans } from '@kit/ui/trans';
 import { createI18nServerInstance } from '~/lib/i18n/i18n.server';
 import { withI18n } from '~/lib/i18n/with-i18n';
 
-import {
-  CostOverTimeChart,
-  TopFeaturesChart,
-  TopModelsChart,
-} from './_components/dashboard-charts';
+import { DashboardChartsSection } from './_components/dashboard/dashboard-charts-section';
+import { DashboardInsightsSection } from './_components/dashboard/dashboard-insights-section';
 import { TeamAccountLayoutPageHeader } from './_components/team-account-layout-page-header';
 import { createDashboardService } from './_lib/server/dashboard.service';
 import { loadTeamWorkspace } from './_lib/server/team-account-workspace.loader';
@@ -48,12 +45,21 @@ async function TeamAccountHomePage({ params }: TeamAccountHomePageProps) {
   const since = thirtyDaysAgo.toISOString();
   const until = now.toISOString();
 
-  const [summary, costOverTime, costByFeature, costByModel] = await Promise.all(
+  const [
+    summary,
+    costOverTime,
+    costByFeature,
+    costByModel,
+    costPer1kByModel,
+    latencyVsCost,
+  ] = await Promise.all(
     [
       service.getSummary(account.id, since, until),
       service.getCostOverTime(account.id, since, until),
       service.getCostByFeature(account.id, since, until),
       service.getCostByModel(account.id, since, until),
+      service.getCostPer1kTokensByModel(account.id, since, until),
+      service.getLatencyVsCost(account.id, since, until),
     ],
   );
 
@@ -102,12 +108,16 @@ async function TeamAccountHomePage({ params }: TeamAccountHomePageProps) {
             />
           </div>
 
-          <CostOverTimeChart data={costOverTime} />
+          <DashboardChartsSection
+            costOverTime={costOverTime}
+            costByFeature={costByFeature}
+            costByModel={costByModel}
+          />
 
-          <div className={'grid grid-cols-1 gap-2 sm:gap-3 lg:grid-cols-2 lg:gap-4'}>
-            <TopFeaturesChart data={costByFeature} />
-            <TopModelsChart data={costByModel} />
-          </div>
+          <DashboardInsightsSection
+            costPer1kByModel={costPer1kByModel}
+            latencyVsCost={latencyVsCost}
+          />
         </div>
       </PageBody>
     </>
@@ -121,12 +131,14 @@ function SummaryCard(props: {
   icon: React.ReactNode;
 }) {
   return (
-    <Card className="shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-2 sm:p-4">
+    <Card className="cursor-default relative overflow-hidden rounded-lg border border-slate-200/80 bg-background transition-transform duration-300 will-change-transform hover:-translate-y-1.5 dark:bg-[radial-gradient(50%_80%_at_25%_0%,--theme(--color-foreground/.1),transparent)] bg-[radial-gradient(95%_110%_at_14%_0%,rgba(80,122,254,0.18),rgba(101,92,207,0.09)_34%,transparent_72%)]">
+      <CardHeader className="relative z-10 flex flex-row items-center justify-between space-y-0 p-3 pb-2 sm:p-4">
         <CardTitle className="text-sm font-medium">{props.title}</CardTitle>
-        <span className="text-muted-foreground">{props.icon}</span>
+        <span className="relative z-10 flex items-center justify-center rounded-lg border border-white/70 bg-white/55 p-2 text-foreground shadow-[0_8px_24px_-18px_rgba(30,41,59,0.55)] backdrop-blur-md">
+          {props.icon}
+        </span>
       </CardHeader>
-      <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
+      <CardContent className="relative z-10 p-3 pt-0 sm:p-4 sm:pt-0">
         <div className="text-xl font-bold sm:text-2xl">{props.value}</div>
         <CardDescription className="text-xs">{props.description}</CardDescription>
       </CardContent>

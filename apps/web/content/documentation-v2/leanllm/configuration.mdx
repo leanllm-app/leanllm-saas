@@ -1,0 +1,94 @@
+---
+title: "Configuration"
+description: "Every LeanLLMConfig field and its env var — the canonical reference."
+publishedAt: 2026-04-28
+order: 8
+status: "published"
+---
+
+`LeanLLMConfig` is a Pydantic model that controls everything from persistence to redaction to retry behavior. Two ways to build it:
+
+```python
+from leanllm import LeanLLMConfig
+
+# Explicit construction
+config = LeanLLMConfig(
+    database_url="sqlite:///events.db",
+    capture_content=True,
+    sampling_rate=0.1,
+)
+
+# Or from environment variables
+config = LeanLLMConfig.from_env()
+```
+
+`LeanLLMConfig.from_env()` is also what runs implicitly when you call `LeanLLM(api_key=...)` without passing a `config=`.
+
+## Persistence
+
+Two operating modes, mutually exclusive. Setting both raises `ValueError` at startup. Setting neither disables persistence (events still flow through `last_event` / `recent_events`).
+
+| Field | Env var | Default | What it does |
+|---|---|---|---|
+| `database_url` | `LEANLLM_DATABASE_URL` | `None` | `postgresql://...` (asyncpg) or `sqlite:///...` (aiosqlite). Self-hosted. |
+| `leanllm_api_key` | `LEANLLM_API_KEY` | `None` | `lllm_...` token for the LeanLLM Service. |
+| `endpoint` | `LEANLLM_ENDPOINT` | `https://api.leanllm.dev` | Target host for the remote backend. |
+| `enable_persistence` | `LEANLLM_ENABLE_PERSISTENCE` | `true` | Master switch. `false` skips queue + worker entirely. |
+| `auto_migrate` | `LEANLLM_AUTO_MIGRATE` | `true` | Run pending Alembic migrations on Postgres store init. |
+
+## Worker / queue
+
+The worker drains the queue in batches. Whichever trigger fires first wins.
+
+| Field | Env var | Default | What it does |
+|---|---|---|---|
+| `queue_max_size` | `LEANLLM_QUEUE_MAX_SIZE` | `10000` | In-memory queue capacity. Overflow drops oldest events (counted in `dropped_events_count`). |
+| `batch_size` | `LEANLLM_BATCH_SIZE` | `100` | Events per `save_batch` call. |
+| `flush_interval_ms` | `LEANLLM_FLUSH_INTERVAL_MS` | `180000` | Force flush after this many milliseconds. |
+
+## Resilient delivery
+
+In-memory retry only. No disk fallback by design — see the rationale in the [request interception page](/docs-v2/leanllm/interception).
+
+| Field | Env var | Default | What it does |
+|---|---|---|---|
+| `retry_max_attempts` | `LEANLLM_RETRY_MAX_ATTEMPTS` | `5` | Attempts per batch before dropping it. |
+| `retry_initial_backoff_ms` | `LEANLLM_RETRY_INITIAL_BACKOFF_MS` | `500` | Base sleep between attempts; doubles each retry, ±20% jitter. |
+| `retry_total_budget_ms` | `LEANLLM_RETRY_TOTAL_BUDGET_MS` | `30000` | Cap on total retry time per batch. |
+
+## Privacy
+
+| Field | Env var | Default | What it does |
+|---|---|---|---|
+| `capture_content` | `LEANLLM_CAPTURE_CONTENT` | `false` | Store prompt + response text on the event. |
+| `redaction_mode` | `LEANLLM_REDACTION_MODE` | `metadata` | `metadata` / `hashed` / `full`. See [redaction](/docs-v2/leanllm/redaction). |
+
+## Normalization
+
+| Field | Env var | Default | What it does |
+|---|---|---|---|
+| `auto_normalize` | `LEANLLM_AUTO_NORMALIZE` | `false` | Populate `normalized_input` / `normalized_output` on every event. See [normalization](/docs-v2/leanllm/normalization). |
+
+## Runtime toggles
+
+| Field | Env var | Default | What it does |
+|---|---|---|---|
+| `sampling_rate` | `LEANLLM_SAMPLING_RATE` | `1.0` | Producer-side sampling (0.0–1.0). Errors always emit regardless. |
+| `environment` | `LEANLLM_ENVIRONMENT` | `None` | Mirrored into `LLMEvent.metadata["environment"]`. |
+| `debug` | `LEANLLM_DEBUG` | `false` | DEBUG log level + per-event stderr summary. |
+
+See [runtime toggles](/docs-v2/leanllm/runtime-toggles) for per-call overrides (`log=False`, `sample=...`, `redaction_mode=...`).
+
+## DX helpers
+
+| Field | Env var | Default | What it does |
+|---|---|---|---|
+| `last_event_buffer` | `LEANLLM_LAST_EVENT_BUFFER` | `32` | Ring buffer size for `client.last_event` / `client.recent_events()`. `0` disables. |
+| `auto_chain` | `LEANLLM_AUTO_CHAIN` | `false` | Auto-fill `parent_request_id` with the previous emitted `event_id` on the same task. |
+
+## Precedence rules
+
+- **Per-call kwargs > ambient context > config**. For example, `client.chat(..., redaction_mode=RedactionMode.HASHED)` overrides any ambient `LeanLLMContext` and the global `config.redaction_mode`.
+- **`LEANLLM_DATABASE_URL` and `LEANLLM_API_KEY` are mutually exclusive.** Setting both raises at startup.
+- **Errors bypass sampling.** Every error event is emitted regardless of `sampling_rate` or per-call `sample=`.
+- **`log=False` is a hard bypass.** No event is built, no hooks fire, the call is a pure pass-through to LiteLLM.

@@ -1,0 +1,97 @@
+---
+title: "Quick start"
+description: "From install to captured-event-and-replay in a few minutes."
+publishedAt: 2026-04-28
+order: 7
+status: "published"
+---
+
+This walkthrough takes you from a fresh install to: making a call, inspecting the captured event, querying persisted events, and replaying one.
+
+We use SQLite so there is no external service to set up. Swap `database_url` for a `postgresql://...` URL when you move to a real environment.
+
+## 1. Install
+
+```bash
+pip install "leanllm-ai[sqlite]"
+```
+
+## 2. Configure and make a call
+
+```python
+from leanllm import LeanLLM, LeanLLMConfig
+
+client = LeanLLM(
+    api_key="sk-...",  # your provider key
+    config=LeanLLMConfig(
+        database_url="sqlite:///leanllm_events.db",
+        capture_content=True,        # store prompt + response text
+        last_event_buffer=32,        # keep last 32 events in memory
+    ),
+)
+
+response = client.chat(
+    model="gpt-4o-mini",
+    messages=[{"role": "user", "content": "Reply with a single word."}],
+    labels={"team": "backend", "feature": "demo"},
+)
+print(response.choices[0].message.content)
+```
+
+`chat()` returns the LiteLLM response immediately. Capture, persistence, retries, and migrations all happen on a background worker thread.
+
+## 3. Inspect the most recent event in memory
+
+```python
+event = client.last_event
+print(event.event_id, event.model, event.total_tokens, event.cost)
+print(event.prompt)    # only set when capture_content=True
+print(event.response)
+```
+
+`client.recent_events(n=5)` returns the last N events from the same in-process ring buffer.
+
+## 4. Query persisted events
+
+The query methods are async so they don't block your loop. They run on the worker's asyncio loop via `run_coroutine_threadsafe`, so you can call them from any thread.
+
+```python
+import asyncio
+
+async def main() -> None:
+    last = await client.list_events(limit=5)
+    for e in last:
+        print(e.event_id, e.model, e.latency_ms, "ms")
+
+    fetched = await client.get_event(event_id=last[0].event_id)
+    print(fetched.cost, fetched.parameters)
+
+asyncio.run(main())
+```
+
+## 5. Replay an event
+
+```python
+import asyncio
+from leanllm import ReplayEngine, ReplayOverrides
+
+engine = ReplayEngine(client=client)
+
+async def replay() -> None:
+    result = await engine.replay_by_id(
+        event_id="<event_id from step 4>",
+        overrides=ReplayOverrides(parameters={"temperature": 0.0}),
+    )
+    print(result.summary())
+    print("text identical:", result.text_identical)
+
+asyncio.run(replay())
+```
+
+Replay re-issues the original call (same model, same messages, same captured parameters) with optional overrides, and reports whether the new response matches the stored one.
+
+## What to read next
+
+- [Configuration](/docs-v2/leanllm/configuration) — every field on `LeanLLMConfig` and its env var.
+- [Request interception](/docs-v2/leanllm/interception) — sync vs streaming, error capture.
+- [Storage query API](/docs-v2/leanllm/storage-query) — full filter set for `list_events`.

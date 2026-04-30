@@ -14,13 +14,15 @@ import { Trans } from '@kit/ui/trans';
 import { cn } from '@kit/ui/utils';
 
 import billingConfig from '~/config/billing.config';
+import featureFlagsConfig from '~/config/feature-flags.config';
 import { createI18nServerInstance } from '~/lib/i18n/i18n.server';
 import { withI18n } from '~/lib/i18n/with-i18n';
 
 // local imports
-import { TeamAccountLayoutPageHeader } from '../_components/team-account-layout-page-header';
-import { loadTeamAccountBillingPage } from '../_lib/server/team-account-billing-page.loader';
-import { loadTeamWorkspace } from '../_lib/server/team-account-workspace.loader';
+import { TeamAccountLayoutPageHeader } from '../../_components/team-account-layout-page-header';
+import { loadTeamAccountBillingPage } from '../../_lib/server/team-account-billing-page.loader';
+import { loadTeamWorkspace } from '../../_lib/server/team-account-workspace.loader';
+import { SettingsTabsCard } from '../_components/settings-tabs-card';
 import { TeamAccountCheckoutForm } from './_components/team-account-checkout-form';
 import { createBillingPortalSession } from './_lib/server/server-actions';
 
@@ -72,7 +74,12 @@ async function TeamAccountBillingPage({ params }: TeamAccountBillingPageProps) {
       />
 
       <PageBody>
-        <div className={cn(`flex max-w-2xl flex-col space-y-4`)}>
+        <div className={cn(`flex w-full flex-col space-y-4`)}>
+          <SettingsTabsCard
+            account={account}
+            billingEnabled={featureFlagsConfig.enableTeamAccountBilling}
+          />
+
           <If condition={!hasBillingData}>
             <If
               condition={canManageBilling}

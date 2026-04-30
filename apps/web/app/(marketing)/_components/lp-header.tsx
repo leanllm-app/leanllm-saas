@@ -25,6 +25,7 @@ export function LpHeader() {
 
 	return (
 		<header
+			data-marketing-header
 			className="fixed inset-x-0 top-0 z-50 w-full"
 		>
 			<nav

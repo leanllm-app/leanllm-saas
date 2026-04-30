@@ -6,10 +6,6 @@ import Link from 'next/link';
 
 import {
   ChevronsUpDown,
-  Home,
-  LogOut,
-  MessageCircleQuestion,
-  Shield,
 } from 'lucide-react';
 
 import { JWTUserData } from '@kit/supabase/types';
@@ -26,6 +22,8 @@ import { ProfileAvatar } from '@kit/ui/profile-avatar';
 import { Trans } from '@kit/ui/trans';
 import { cn } from '@kit/ui/utils';
 
+import { Home, Notes, Logout, ShieldKeyhole } from '@solar-icons/react/ssr'
+
 import { usePersonalAccountData } from '../hooks/use-personal-account-data';
 
 export function PersonalAccountDropdown({
@@ -33,6 +31,7 @@ export function PersonalAccountDropdown({
   user,
   signOutRequested,
   showProfileName = true,
+  showProfileEmail = false,
   minimalTrigger = false,
   paths,
   features,
@@ -57,6 +56,7 @@ export function PersonalAccountDropdown({
   };
 
   showProfileName?: boolean;
+  showProfileEmail?: boolean;
 
   /** Sem borda tracejada / cartão — útil na navbar */
   minimalTrigger?: boolean;
@@ -123,12 +123,14 @@ export function PersonalAccountDropdown({
               {displayName}
             </span>
 
-            <span
-              data-test={'account-dropdown-email'}
-              className={'text-muted-foreground truncate text-xs'}
-            >
-              {signedInAsLabel}
-            </span>
+            <If condition={showProfileEmail}>
+              <span
+                data-test={'account-dropdown-email'}
+                className={'text-muted-foreground truncate text-xs'}
+              >
+                {signedInAsLabel}
+              </span>
+            </If>
           </div>
 
           <ChevronsUpDown
@@ -161,7 +163,9 @@ export function PersonalAccountDropdown({
             className={'s-full flex cursor-pointer items-center space-x-2'}
             href={paths.home}
           >
-            <Home className={'h-5'} />
+            <Home weight='BoldDuotone' className='h-5 w-5' color='#655ccf' />
+
+
 
             <span>
               <Trans i18nKey={'common:routes.home'} />
@@ -176,7 +180,7 @@ export function PersonalAccountDropdown({
             className={'s-full flex cursor-pointer items-center space-x-2'}
             href={'/docs'}
           >
-            <MessageCircleQuestion className={'h-5'} />
+            <Notes weight='BoldDuotone' className='h-5 w-5' color='#655ccf' />
 
             <span>
               <Trans i18nKey={'common:documentation'} />
@@ -194,7 +198,8 @@ export function PersonalAccountDropdown({
               }
               href={'/admin'}
             >
-              <Shield className={'h-5'} />
+              <ShieldKeyhole weight='BoldDuotone' className='h-5 w-5' color='#655ccf' />
+
 
               <span>Super Admin</span>
             </Link>
@@ -203,11 +208,11 @@ export function PersonalAccountDropdown({
 
         <DropdownMenuSeparator />
 
-        <If condition={features.enableThemeToggle}>
+        {/* <If condition={features.enableThemeToggle}>
           <SubMenuModeToggle />
         </If>
 
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator /> */}
 
         <DropdownMenuItem
           data-test={'account-dropdown-sign-out'}
@@ -216,7 +221,7 @@ export function PersonalAccountDropdown({
           onClick={signOutRequested}
         >
           <span className={'flex w-full items-center space-x-2'}>
-            <LogOut className={'h-5'} />
+            <Logout weight='BoldDuotone' className='h-5 w-5' color='#655ccf' />
 
             <span>
               <Trans i18nKey={'auth:signOut'} />

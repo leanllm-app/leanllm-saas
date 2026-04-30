@@ -2,7 +2,10 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-import { Bell, CircleAlert, Info, TriangleAlert, XIcon } from 'lucide-react';
+import { CircleAlert, Info, TriangleAlert, XIcon } from 'lucide-react';
+import { Bell } from '@solar-icons/react/ssr'
+
+
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@kit/ui/button';
@@ -112,7 +115,10 @@ export function NotificationsPopover(params: {
     <Popover modal open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button className={'relative h-9 w-9'} variant={'ghost'}>
-          <Bell className={'min-h-4 min-w-4'} />
+         
+          <Bell weight='BoldDuotone' className='min-h-4 min-w-4' color='#655ccf' />
+
+
 
           <span
             className={cn(

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Bot, Boxes, Check, Search, UserRound } from 'lucide-react';
@@ -78,6 +78,10 @@ function formatGroupedLabel(prefix: string, values: string[]) {
   return `${prefix}: ${values.join(', ')}`;
 }
 
+function toStableParam(values: string[]) {
+  return [...new Set(values)].sort().join(',');
+}
+
 export function EventsFilters(props: {
   models: string[];
   features: string[];
@@ -87,44 +91,109 @@ export function EventsFilters(props: {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const setMultiFilter = useCallback(
-    (key: string, values: string[]) => {
+  const currentModels = normalizeList(searchParams.get('model'));
+  const currentFeatures = normalizeList(searchParams.get('feature'));
+  const currentUserIds = normalizeList(searchParams.get('userId'));
+  const [selectedModels, setSelectedModels] = useState<string[]>(currentModels);
+  const [selectedFeatures, setSelectedFeatures] = useState<string[]>(currentFeatures);
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>(currentUserIds);
+
+  const currentSignature = useMemo(
+    () =>
+      `${toStableParam(currentModels)}|${toStableParam(currentFeatures)}|${toStableParam(currentUserIds)}`,
+    [currentFeatures, currentModels, currentUserIds],
+  );
+  const selectedSignature = useMemo(
+    () =>
+      `${toStableParam(selectedModels)}|${toStableParam(selectedFeatures)}|${toStableParam(selectedUserIds)}`,
+    [selectedFeatures, selectedModels, selectedUserIds],
+  );
+
+  useEffect(() => {
+    setSelectedModels(currentModels);
+    setSelectedFeatures(currentFeatures);
+    setSelectedUserIds(currentUserIds);
+  }, [currentSignature]);
+
+  const applyFiltersToUrl = useCallback(
+    (next: { models: string[]; features: string[]; userIds: string[] }) => {
       const params = new URLSearchParams(searchParams.toString());
-      if (values.length > 0) {
-        params.set(key, values.join(','));
+      if (next.models.length > 0) {
+        params.set('model', next.models.join(','));
       } else {
-        params.delete(key);
+        params.delete('model');
+      }
+      if (next.features.length > 0) {
+        params.set('feature', next.features.join(','));
+      } else {
+        params.delete('feature');
+      }
+      if (next.userIds.length > 0) {
+        params.set('userId', next.userIds.join(','));
+      } else {
+        params.delete('userId');
       }
       params.delete('page');
-      router.push(`${pathname}?${params.toString()}`);
+      router.replace(`${pathname}?${params.toString()}`);
     },
     [pathname, router, searchParams],
   );
 
-  const toggleMultiFilter = useCallback(
-    (key: string, value: string) => {
-      const currentValues = normalizeList(searchParams.get(key));
-      const nextValues = currentValues.includes(value)
-        ? currentValues.filter((v) => v !== value)
-        : [...currentValues, value];
+  useEffect(() => {
+    if (selectedSignature === currentSignature) {
+      return;
+    }
 
-      setMultiFilter(key, nextValues);
-    },
-    [searchParams, setMultiFilter],
-  );
+    const timer = window.setTimeout(() => {
+      applyFiltersToUrl({
+        models: selectedModels,
+        features: selectedFeatures,
+        userIds: selectedUserIds,
+      });
+    }, 300);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    applyFiltersToUrl,
+    currentSignature,
+    selectedFeatures,
+    selectedModels,
+    selectedSignature,
+    selectedUserIds,
+  ]);
+
+  const toggleMultiFilter = useCallback((key: 'model' | 'feature' | 'userId', value: string) => {
+    const update = (values: string[]) =>
+      values.includes(value) ? values.filter((v) => v !== value) : [...values, value];
+
+    if (key === 'model') {
+      setSelectedModels((prev) => update(prev));
+      return;
+    }
+    if (key === 'feature') {
+      setSelectedFeatures((prev) => update(prev));
+      return;
+    }
+    setSelectedUserIds((prev) => update(prev));
+  }, []);
+
+  const clearFilter = useCallback((key: 'model' | 'feature' | 'userId') => {
+    if (key === 'model') {
+      setSelectedModels([]);
+      return;
+    }
+    if (key === 'feature') {
+      setSelectedFeatures([]);
+      return;
+    }
+    setSelectedUserIds([]);
+  }, []);
 
   const clearAllFilters = useCallback(() => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete('model');
-    params.delete('feature');
-    params.delete('userId');
-    params.delete('page');
-    router.push(`${pathname}?${params.toString()}`);
-  }, [pathname, router, searchParams]);
-
-  const currentModels = normalizeList(searchParams.get('model'));
-  const currentFeatures = normalizeList(searchParams.get('feature'));
-  const currentUserIds = normalizeList(searchParams.get('userId'));
+    setSelectedModels([]);
+    setSelectedFeatures([]);
+    setSelectedUserIds([]);
+  }, []);
 
   const activeItems = useMemo(() => {
     const items: Array<{ id: string; label: string; onRemove: () => void }> = [];
@@ -133,7 +202,7 @@ export function EventsFilters(props: {
       items.push({
         id: 'model',
         label: formatGroupedLabel('Model', currentModels),
-        onRemove: () => setMultiFilter('model', []),
+        onRemove: () => clearFilter('model'),
       });
     }
 
@@ -141,7 +210,7 @@ export function EventsFilters(props: {
       items.push({
         id: 'feature',
         label: formatGroupedLabel('Feature', currentFeatures),
-        onRemove: () => setMultiFilter('feature', []),
+        onRemove: () => clearFilter('feature'),
       });
     }
 
@@ -149,7 +218,7 @@ export function EventsFilters(props: {
       items.push({
         id: 'userId',
         label: formatGroupedLabel('User', currentUserIds),
-        onRemove: () => setMultiFilter('userId', []),
+        onRemove: () => clearFilter('userId'),
       });
     }
 
@@ -158,7 +227,7 @@ export function EventsFilters(props: {
     currentFeatures,
     currentModels,
     currentUserIds,
-    setMultiFilter,
+    clearFilter,
   ]);
 
   const panelItems = useMemo(
@@ -167,12 +236,12 @@ export function EventsFilters(props: {
         id: 'model',
         label: 'Model',
         icon: <Bot className="h-4 w-4" />,
-        activeCount: currentModels.length,
-        onClear: () => setMultiFilter('model', []),
+        activeCount: selectedModels.length,
+        onClear: () => clearFilter('model'),
         content: (
           <MultiSelectList
             options={props.models}
-            selected={currentModels}
+            selected={selectedModels}
             onToggle={(v) => toggleMultiFilter('model', v)}
           />
         ),
@@ -181,12 +250,12 @@ export function EventsFilters(props: {
         id: 'feature',
         label: 'Feature',
         icon: <Boxes className="h-4 w-4" />,
-        activeCount: currentFeatures.length,
-        onClear: () => setMultiFilter('feature', []),
+        activeCount: selectedFeatures.length,
+        onClear: () => clearFilter('feature'),
         content: (
           <MultiSelectList
             options={props.features}
-            selected={currentFeatures}
+            selected={selectedFeatures}
             onToggle={(v) => toggleMultiFilter('feature', v)}
           />
         ),
@@ -195,24 +264,25 @@ export function EventsFilters(props: {
         id: 'userId',
         label: 'Proprietario',
         icon: <UserRound className="h-4 w-4" />,
-        activeCount: currentUserIds.length,
-        onClear: () => setMultiFilter('userId', []),
+        activeCount: selectedUserIds.length,
+        onClear: () => clearFilter('userId'),
         content: (
           <MultiSelectList
             options={props.userIds}
-            selected={currentUserIds}
+            selected={selectedUserIds}
             onToggle={(v) => toggleMultiFilter('userId', v)}
           />
         ),
       },
     ],
     [
-      currentFeatures,
-      currentModels,
-      currentUserIds,
+      clearFilter,
       props.features,
       props.models,
       props.userIds,
+      selectedFeatures,
+      selectedModels,
+      selectedUserIds,
       toggleMultiFilter,
     ],
   );

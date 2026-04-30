@@ -17,6 +17,7 @@
     "./api": "./src/server/api.ts"
   },
   "dependencies": {
+    "@solar-icons/react": "^1.1.0",
     "nanoid": "^5.1.6"
   },
   "devDependencies": {

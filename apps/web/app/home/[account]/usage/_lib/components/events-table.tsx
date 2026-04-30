@@ -73,6 +73,7 @@ export function EventsTable(props: {
     <Button
       size={'sm'}
       variant={'outline'}
+      className="cursor-pointer"
       onClick={() => exportToCsv(props.data)}
       disabled={props.data.length === 0}
       data-test={'export-csv'}

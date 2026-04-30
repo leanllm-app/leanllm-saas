@@ -54,7 +54,7 @@ export function AccountDataTableFilters(props: {
             <Button
               type="button"
               variant="outline"
-              className="h-9 rounded-xl border-dashed px-3.5"
+              className="h-9 cursor-pointer rounded-xl border border-solid px-3.5"
             >
               <Plus className="mr-2 h-4 w-4 text-slate-600" />
               Filtros

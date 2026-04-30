@@ -1,0 +1,110 @@
+---
+title: "Semantic Normalization"
+description: "Tag every event with input/output type, length bucket, language, and a stable semantic hash."
+publishedAt: 2026-04-28
+order: 30
+status: "published"
+---
+
+## What it does
+
+When `auto_normalize=True`, LeanLLM populates `LLMEvent.normalized_input` and `LLMEvent.normalized_output` with coarse semantic features:
+
+- `input_type` (`chat` / `completion` / `tool` / `unknown`)
+- `output_type` (`text` / `json` / `code` / `tool_call` / `unknown`)
+- `language` — coarse script tag (`latin`, `cjk`, `cyrillic`, `arabic`, or `None`)
+- `length_bucket` — `short` (≤50 words) / `medium` (≤500) / `long`
+- `semantic_hash` — 16-hex-char SHA-256 over a canonicalized form of the input (UUIDs, timestamps, hex IDs, and long numbers replaced with placeholders before hashing)
+
+The hash is **stable across cosmetic noise** (whitespace, casing, dynamic IDs), so semantically identical prompts collapse to the same hash even when surface text differs.
+
+## When to use
+
+- You want to bucket events by output type for evals (JSON output rate, code answer rate).
+- You want to detect duplicate prompts across requests via `semantic_hash`.
+- You want a coarse language signal without shipping a full language detector.
+
+## API
+
+Re-exported public types live under `leanllm.normalizer`:
+
+- `NormalizedInput`, `NormalizedOutput` — Pydantic models stored on the event.
+- `InputType`, `OutputType`, `LengthBucket` — enums.
+- `normalize_input(messages=..., auto_tag=...)` and `normalize_output(text=..., auto_tag=...)` — used internally; available for direct use.
+- `canonicalize(text=...)` and `semantic_hash(text=...)` — pure functions for the hashing pipeline.
+
+### Signatures
+
+```python
+def normalize_input(
+    *,
+    messages: list[dict[str, str]],
+    auto_tag: bool = False,
+) -> NormalizedInput: ...
+
+def normalize_output(
+    *,
+    text: str,
+    auto_tag: bool = False,
+) -> NormalizedOutput: ...
+```
+
+`auto_tag=True` enables `input_type` / `output_type` / `language` detection. With `auto_tag=False`, only `length_bucket` and `semantic_hash` are populated. The client always calls these with `auto_tag=True`.
+
+## Examples
+
+### Enable normalization per client
+
+```python
+from leanllm import LeanLLM, LeanLLMConfig
+
+client = LeanLLM(
+    api_key="sk-...",
+    config=LeanLLMConfig(
+        database_url="sqlite:///events.db",
+        auto_normalize=True,
+    ),
+)
+
+response = client.chat(
+    model="gpt-4o-mini",
+    messages=[{"role": "user", "content": '{"question": "ping?"}'}],
+)
+event = client.last_event
+print(event.normalized_input.input_type)        # InputType.CHAT
+print(event.normalized_input.length_bucket)     # LengthBucket.SHORT
+print(event.normalized_output.output_type)      # likely OutputType.TEXT or JSON
+print(event.normalized_input.semantic_hash)     # stable 16-char hex
+```
+
+### Use the helpers directly
+
+```python
+from leanllm.normalizer import normalize_input, semantic_hash, canonicalize
+
+messages = [{"role": "user", "content": "Run req 123e4567-e89b-12d3-a456-426614174000"}]
+ni = normalize_input(messages=messages, auto_tag=True)
+print(ni.input_type, ni.length_bucket, ni.semantic_hash)
+
+# Same prompt with different UUID → same canonical form, same hash
+print(canonicalize(text="Run req abc-different-uuid"))
+print(semantic_hash(text="Run req abc-different-uuid"))
+```
+
+## Configuration
+
+| Field | Env var | Default | What it does |
+|---|---|---|---|
+| `auto_normalize` | `LEANLLM_AUTO_NORMALIZE` | `false` | Populate `normalized_input` / `normalized_output` on every event. |
+
+## Edge cases & gotchas
+
+- **Tool-call outputs.** When the response contains tool calls instead of text, `normalized_output.output_type` is set to `tool_call` and length is `short` (no text to measure).
+- **Empty inputs.** `semantic_hash` is `None` when there is no extractable content. Length bucket falls through to `short`.
+- **Language detection is coarse.** It returns the dominant script family — not the language itself. Latin-script Portuguese and English both report `latin`.
+- **Canonicalization is destructive.** `<uuid>`, `<ts>`, `<hex>`, `<num>` placeholders replace the originals before hashing. The original prompt is unaffected — only the hash input is canonicalized.
+
+## See also
+
+- [Storage query API](/docs-v2/leanllm/storage-query)
+- [Privacy & redaction](/docs-v2/leanllm/redaction)

@@ -228,7 +228,7 @@ export function DataTableView<TData, TValue = unknown>(
 
       <div
         className={cn(
-          'border-border overflow-x-auto rounded-lg border',
+          'border-border overflow-x-auto rounded-lg border bg-linear-to-r from-white via-white to-[#faf9ff]',
           tableContainerClassName,
         )}
       >
@@ -247,7 +247,7 @@ export function DataTableView<TData, TValue = unknown>(
           </div>
         ) : (
           <Table>
-            <TableHeader className="bg-slate-50/70 dark:bg-white/5">
+            <TableHeader className="bg-[#eee7ff]/75 backdrop-blur-md supports-backdrop-filter:bg-[#eee7ff]/60 dark:bg-[#2c2350]/65 dark:supports-backdrop-filter:bg-[#2c2350]/50">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow
                   key={headerGroup.id}
@@ -256,7 +256,7 @@ export function DataTableView<TData, TValue = unknown>(
                   {headerGroup.headers.map((header) => (
                     <TableHead
                       key={header.id}
-                      className="text-muted-foreground h-12 px-4 text-sm font-semibold"
+                      className="h-12 px-4 text-sm font-semibold text-slate-700 dark:text-slate-100"
                     >
                       {header.isPlaceholder
                         ? null

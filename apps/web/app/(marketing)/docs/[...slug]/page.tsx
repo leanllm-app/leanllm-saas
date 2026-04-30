@@ -51,26 +51,16 @@ async function DocumentationPage({ params }: DocumentationPageProps) {
   const description = page?.description ?? '';
 
   return (
-    <div className={'flex flex-1 flex-col gap-y-4 overflow-y-hidden'}>
-      <div className={'flex size-full overflow-y-hidden'}>
-        <div className="relative size-full">
-          <article
-            className={cn(
-              'absolute size-full w-full gap-y-12 overflow-y-auto pt-4 pb-36',
-            )}
-          >
-            <section
-              className={'flex flex-col gap-y-1 border-b border-dashed pb-4'}
-            >
-              <h1
-                className={
-                  'text-foreground text-3xl font-semibold tracking-tighter'
-                }
-              >
+    <div className={'flex flex-1 flex-col gap-y-8 pb-16'}>
+      <div className={'w-full'}>
+        <div className="mx-auto w-full max-w-4xl">
+          <article className={cn('w-full space-y-8 rounded-xl border p-4 md:p-8')}>
+            <section className={'flex flex-col gap-y-2 border-b border-dashed pb-6'}>
+              <h1 className={'text-foreground text-3xl font-semibold tracking-tight'}>
                 {page.title}
               </h1>
 
-              <h2 className={'text-secondary-foreground/80 text-lg'}>
+              <h2 className={'text-muted-foreground text-base md:text-lg'}>
                 {description}
               </h2>
             </section>
@@ -85,7 +75,9 @@ async function DocumentationPage({ params }: DocumentationPageProps) {
       <If condition={page.children.length > 0}>
         <Separator />
 
-        <DocsCards cards={page.children ?? []} />
+        <div className="mx-auto w-full max-w-4xl">
+          <DocsCards cards={page.children ?? []} />
+        </div>
       </If>
     </div>
   );

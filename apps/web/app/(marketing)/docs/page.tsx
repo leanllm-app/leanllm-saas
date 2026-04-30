@@ -21,13 +21,13 @@ async function DocsPage() {
   const cards = items.filter((item) => !item.parentId);
 
   return (
-    <div className={'flex w-full flex-1 flex-col gap-y-6 xl:gap-y-8'}>
+    <div className={'flex w-full flex-1 flex-col gap-y-6'}>
       <SitePageHeader
         title={t('marketing:documentation')}
         subtitle={t('marketing:documentationSubtitle')}
       />
 
-      <div className={'relative flex size-full justify-center overflow-y-auto'}>
+      <div className={'mx-auto w-full max-w-4xl pb-16'}>
         <DocsCards cards={cards} />
       </div>
     </div>

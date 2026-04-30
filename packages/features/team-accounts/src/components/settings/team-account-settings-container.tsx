@@ -32,40 +32,42 @@ export function TeamAccountSettingsContainer(props: {
 }) {
   return (
     <div className={'flex w-full flex-col space-y-4'}>
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            <Trans i18nKey={'teams:settings.teamLogo'} />
-          </CardTitle>
+      <div className={'grid grid-cols-1 gap-4 md:grid-cols-2'}>
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              <Trans i18nKey={'teams:settings.teamLogo'} />
+            </CardTitle>
 
-          <CardDescription>
-            <Trans i18nKey={'teams:settings.teamLogoDescription'} />
-          </CardDescription>
-        </CardHeader>
+            <CardDescription>
+              <Trans i18nKey={'teams:settings.teamLogoDescription'} />
+            </CardDescription>
+          </CardHeader>
 
-        <CardContent>
-          <UpdateTeamAccountImage account={props.account} />
-        </CardContent>
-      </Card>
+          <CardContent>
+            <UpdateTeamAccountImage account={props.account} />
+          </CardContent>
+        </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            <Trans i18nKey={'teams:settings.teamName'} />
-          </CardTitle>
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              <Trans i18nKey={'teams:settings.teamName'} />
+            </CardTitle>
 
-          <CardDescription>
-            <Trans i18nKey={'teams:settings.teamNameDescription'} />
-          </CardDescription>
-        </CardHeader>
+            <CardDescription>
+              <Trans i18nKey={'teams:settings.teamNameDescription'} />
+            </CardDescription>
+          </CardHeader>
 
-        <CardContent>
-          <UpdateTeamAccountNameForm
-            path={props.paths.teamAccountSettings}
-            account={props.account}
-          />
-        </CardContent>
-      </Card>
+          <CardContent>
+            <UpdateTeamAccountNameForm
+              path={props.paths.teamAccountSettings}
+              account={props.account}
+            />
+          </CardContent>
+        </Card>
+      </div>
 
       <TeamAccountDangerZone
         primaryOwnerUserId={props.account.primaryOwnerUserId}

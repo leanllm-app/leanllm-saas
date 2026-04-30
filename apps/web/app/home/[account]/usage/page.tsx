@@ -15,7 +15,7 @@ import { withI18n } from '~/lib/i18n/with-i18n';
 
 import { TeamAccountLayoutPageHeader } from '../_components/team-account-layout-page-header';
 import { loadTeamWorkspace } from '../_lib/server/team-account-workspace.loader';
-import { EventsTable } from './_lib/components/events-table';
+import { EventsSection } from './_lib/components/events-section';
 import { createUsageService } from './_lib/server/usage.service';
 
 interface UsagePageProps {
@@ -47,7 +47,7 @@ async function UsagePage({ params, searchParams }: UsagePageProps) {
           .filter(Boolean)
       : [];
 
-  const [result, filterOptions] = await Promise.all([
+  const [initialResult, filterOptions] = await Promise.all([
     service.getEvents({
       accountId: account.id,
       page: Math.max(0, page),
@@ -79,12 +79,9 @@ async function UsagePage({ params, searchParams }: UsagePageProps) {
             </CardHeader>
 
             <CardContent className={'space-y-4'}>
-              <EventsTable
-                data={result.events}
-                pageIndex={Math.max(0, page)}
-                pageCount={result.pageCount}
-                total={result.total}
-                pageSize={result.pageSize}
+              <EventsSection
+                accountId={account.id}
+                initialData={initialResult}
                 models={filterOptions.models}
                 features={filterOptions.features}
                 userIds={filterOptions.userIds}

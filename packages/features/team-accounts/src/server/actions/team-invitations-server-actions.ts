@@ -236,7 +236,7 @@ export const renewInvitationAction = enhanceAction(
 );
 
 function revalidateMemberPage() {
-  revalidatePath('/home/[account]/members', 'page');
+  revalidatePath('/home/[account]/settings/members', 'page');
 }
 
 /**

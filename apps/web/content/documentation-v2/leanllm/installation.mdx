@@ -1,0 +1,51 @@
+---
+title: "Installation"
+description: "Install the LeanLLM SDK and pick the backends you need."
+publishedAt: 2026-04-28
+order: 6
+status: "published"
+---
+
+## Install
+
+```bash
+pip install leanllm-ai
+```
+
+The base package brings the client, the event pipeline, redaction, normalization, replay, lineage, and the CLI. Storage backends are gated behind extras so you only install drivers you use.
+
+## Extras
+
+| Extra | Pulls in | Enables |
+|---|---|---|
+| `[sqlite]` | `aiosqlite` | `LEANLLM_DATABASE_URL=sqlite:///...` — local file or `:memory:`. |
+| `[postgres]` | `asyncpg`, `alembic`, `sqlalchemy[asyncio]` | `LEANLLM_DATABASE_URL=postgresql://...` — self-hosted Postgres with auto-migrations. |
+| `[remote]` | `httpx` | `LEANLLM_API_KEY=lllm_...` — push events to the LeanLLM Service. |
+| `[dev]` | All of the above plus `pytest`, `pytest-asyncio`, `ruff` | Contributor environment. |
+
+```bash
+pip install "leanllm-ai[sqlite]"
+pip install "leanllm-ai[postgres]"
+pip install "leanllm-ai[remote]"
+pip install "leanllm-ai[dev,sqlite,postgres,remote]"
+```
+
+## Requirements
+
+- Python 3.10, 3.11, 3.12, or 3.13.
+- A LiteLLM-supported provider key (OpenAI, Anthropic, Mistral, Bedrock, Vertex, etc.) for the underlying call. LeanLLM does not embed any provider key of its own.
+- For Postgres: a reachable Postgres 13+ instance. The first store init runs Alembic migrations automatically (`auto_migrate=True`).
+
+## What gets installed
+
+- `leanllm` — the Python package (client, config, events, storage, replay, normalizer, redaction, CLI).
+- `leanllm` console script — invokable as `leanllm logs`, `leanllm replay`. See the [CLI page](/docs-v2/leanllm/cli).
+
+## Without persistence
+
+The SDK works without any storage extra: events stay in the in-memory ring buffer (`client.last_event`, `client.recent_events()`). Useful for notebooks and exploration. Enable persistence later by setting `LEANLLM_DATABASE_URL` or `LEANLLM_API_KEY` and reinstalling with the matching extra.
+
+## Next
+
+- [Quick start](/docs-v2/leanllm/quick-start)
+- [Configuration](/docs-v2/leanllm/configuration)

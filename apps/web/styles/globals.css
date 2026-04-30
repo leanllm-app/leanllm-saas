@@ -14,6 +14,8 @@
 @import './markdoc.css';
 @import './makerkit.css';
 @import 'tw-animate-css';
+@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/preset.css';
 
 /* content sources - update the below if you add a new path */
 @source '../../../packages/*/src/**/*.{ts,tsx}';

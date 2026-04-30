@@ -10,12 +10,11 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
+  SidebarTrigger,
 } from '@kit/ui/shadcn-sidebar';
 
 import { DocsNavLink } from '~/(marketing)/docs/_components/docs-nav-link';
 import { DocsNavigationCollapsible } from '~/(marketing)/docs/_components/docs-navigation-collapsible';
-
-import { FloatingDocumentationNavigation } from './floating-docs-navigation';
 
 function Node({
   node,
@@ -136,32 +135,26 @@ export function DocsNavigation({
 }) {
   return (
     <>
+      <div className="bg-background/95 sticky top-14 z-20 -mx-2 mb-3 flex items-center gap-2 border-y px-2 py-2 backdrop-blur md:hidden">
+        <SidebarTrigger className="h-8 w-8" />
+        <span className="text-muted-foreground text-sm font-medium">Navegacao</span>
+      </div>
+
       <Sidebar
         variant={'ghost'}
+        layout={'contained'}
         className={
-          'border-border/50 sticky z-1 mt-4 max-h-full overflow-y-auto pr-4'
+          'border-border/50 top-14 mt-0 h-[calc(100svh-4.5rem)] max-h-[calc(100svh-4.5rem)] overflow-y-auto border-r pr-4'
         }
       >
-        <SidebarGroup className="p-0">
+        <SidebarGroup className="p-0 pb-4">
           <SidebarGroupContent>
-            <SidebarMenu className={'pb-48'}>
+            <SidebarMenu className={'pb-8'}>
               <Tree pages={pages} level={0} prefix={prefix} />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </Sidebar>
-
-      <div className={'lg:hidden'}>
-        <FloatingDocumentationNavigation>
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <Tree pages={pages} level={0} prefix={prefix} />
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </FloatingDocumentationNavigation>
-      </div>
     </>
   );
 }

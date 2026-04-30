@@ -1,0 +1,178 @@
+---
+title: "Deterministic Replay"
+description: "Re-run any captured event through a live model and diff the new response against the original."
+publishedAt: 2026-04-28
+order: 40
+status: "published"
+---
+
+## What it does
+
+`ReplayEngine` re-issues a captured `LLMEvent` through your client (same model, same messages, same captured parameters), measures the new call, and returns a `ReplayResult` with side-by-side comparisons: text identical or unified diff, token delta, latency delta, new request ID.
+
+Replay runs the call through the **normal pipeline** of the client you pass in — hooks, post-call event emission, persistence (if enabled). The engine itself is stateless.
+
+## When to use
+
+- You want to test prompt or parameter changes against a captured production event.
+- You want regression testing across model versions (`overrides=ReplayOverrides(model="gpt-4o")`).
+- You want to validate that a deterministic response stays stable (`temperature=0.0`).
+- You have a list of failing event IDs and want to re-run them in batch.
+
+## API
+
+Re-exported from `leanllm`:
+
+- `ReplayEngine` — the engine.
+- `ReplayOverrides` — optional per-replay overrides.
+- `ReplayResult` — outcome of a single replay (diff, deltas, summary).
+
+### Signatures
+
+```python
+class ReplayOverrides(BaseModel):
+    model: str | None = None
+    parameters: dict[str, Any] | None = None
+    messages: list[dict[str, Any]] | None = None
+    tools: list[dict[str, Any]] | None = None
+
+class ReplayEngine:
+    def __init__(self, *, client: LeanLLM) -> None: ...
+
+    def replay(
+        self,
+        *,
+        event: LLMEvent,
+        overrides: ReplayOverrides | None = None,
+    ) -> ReplayResult: ...
+
+    async def replay_by_id(
+        self,
+        *,
+        event_id: str,
+        overrides: ReplayOverrides | None = None,
+    ) -> ReplayResult: ...
+
+    def replay_batch(
+        self,
+        *,
+        events: list[LLMEvent],
+        overrides: ReplayOverrides | None = None,
+        max_workers: int = 4,
+    ) -> list[ReplayResult]: ...
+
+class ReplayResult(BaseModel):
+    original_request_id: str
+    new_request_id: str | None
+    error_message: str | None
+
+    text_before: str | None
+    text_after: str | None
+    text_diff: str | None
+    text_identical: bool
+
+    tokens_before: int
+    tokens_after: int
+    tokens_delta: int
+
+    latency_ms_before: int
+    latency_ms_after: int
+    latency_ms_delta: int
+
+    def summary(self) -> str: ...
+    def pretty_print(self, file=None) -> None: ...
+```
+
+## Examples
+
+### Replay one event by ID
+
+```python
+import asyncio
+from leanllm import LeanLLM, LeanLLMConfig, ReplayEngine, ReplayOverrides
+
+client = LeanLLM(
+    api_key="sk-...",
+    config=LeanLLMConfig(
+        database_url="sqlite:///events.db",
+        capture_content=True,  # required so prompts can be replayed
+    ),
+)
+engine = ReplayEngine(client=client)
+
+async def main() -> None:
+    result = await engine.replay_by_id(
+        event_id="<event_id>",
+        overrides=ReplayOverrides(parameters={"temperature": 0.0}),
+    )
+    result.pretty_print()
+    print("identical:", result.text_identical)
+
+asyncio.run(main())
+```
+
+### Replay an event you already have in memory
+
+```python
+from leanllm import LeanLLM, LeanLLMConfig, ReplayEngine
+
+client = LeanLLM(api_key="sk-...", config=LeanLLMConfig(enable_persistence=False))
+engine = ReplayEngine(client=client)
+
+response = client.chat(
+    model="gpt-4o-mini",
+    messages=[{"role": "user", "content": "Pick a number from 1 to 10."}],
+)
+event = client.last_event
+
+result = engine.replay(event=event)  # synchronous
+print(result.summary())
+```
+
+### Batch replay from a list
+
+```python
+import asyncio
+from leanllm import LeanLLM, LeanLLMConfig, ReplayEngine, ReplayOverrides
+
+client = LeanLLM(
+    api_key="sk-...",
+    config=LeanLLMConfig(database_url="sqlite:///events.db", capture_content=True),
+)
+engine = ReplayEngine(client=client)
+
+async def main() -> None:
+    failing = await client.list_events(errors_only=True, limit=20)
+    results = engine.replay_batch(
+        events=failing,
+        overrides=ReplayOverrides(parameters={"temperature": 0.0}),
+        max_workers=4,
+    )
+    failures = [r for r in results if r.error_message]
+    print(f"{len(results)} replays, {len(failures)} still failing")
+
+asyncio.run(main())
+```
+
+## Configuration
+
+Replay needs `capture_content=True` on the client that **originally captured** the events — otherwise the prompt is `None` and there is nothing to replay. You can work around this by passing `ReplayOverrides(messages=[...])` explicitly.
+
+| Field | Env var | Default | What it does |
+|---|---|---|---|
+| `capture_content` | `LEANLLM_CAPTURE_CONTENT` | `false` | Required for replay — captures the prompt JSON. |
+| `redaction_mode` | `LEANLLM_REDACTION_MODE` | `metadata` | If `metadata`, the prompt isn't stored; replay needs explicit `messages=`. |
+
+## Edge cases & gotchas
+
+- **`replay()` is synchronous.** Use `replay_by_id()` (async) when you need to fetch from storage first.
+- **Stream is stripped.** Replay forces a non-streaming call regardless of the original — even if the captured `parameters["stream"]` was `True`.
+- **`replay_by_id()` raises if the event is missing.** It does not return `None`; expect `ValueError`.
+- **`replay_batch()` is best-effort.** Per-item failures become `ReplayResult` entries with `error_message` set, not exceptions.
+- **The replay client emits its own event.** Replays go through the normal pipeline. If the same client persists, you'll see two events (original + replay). Set `enable_persistence=False` on the replay client when you don't want that — that's exactly what `leanllm replay` (CLI) does.
+
+## See also
+
+- [CLI](/docs-v2/leanllm/cli) — `leanllm replay <event_id>` and `--batch`.
+- [Storage query API](/docs-v2/leanllm/storage-query)
+- [Lineage & execution graph](/docs-v2/leanllm/lineage)

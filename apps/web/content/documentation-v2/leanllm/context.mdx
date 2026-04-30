@@ -1,0 +1,138 @@
+---
+title: "Context Propagation"
+description: "Tag every LLM call with user, session, feature, environment, and correlation IDs."
+publishedAt: 2026-04-28
+order: 20
+status: "published"
+---
+
+## What it does
+
+`LeanLLMContext` carries identity (`user_id`, `session_id`, `feature`, `environment`, custom tags) and tracing information (`correlation_id`, `parent_request_id`) across nested LLM calls. Propagation rides on `contextvars.ContextVar`, so a context set on the outer task automatically applies to every `chat()` made inside — including in async code that spawns sub-tasks.
+
+The `trace()` helper opens a correlation scope: every call inside shares the same `correlation_id` and the auto-chain pointer is reset to the start of the scope.
+
+## When to use
+
+- You want to slice LeanLLM events by user, team, feature, or environment without passing labels through every function.
+- You want to group multiple LLM calls into one trace for replay, lineage, or cost roll-up.
+- You want per-request overrides without rewriting your service layer to thread arguments down.
+
+## API
+
+Re-exported from `leanllm`:
+
+- `LeanLLMContext` — Pydantic model carrying the context fields.
+- `set_global_context(context=...)` — sets the process-wide default (thread-isolated).
+- `use_context(context=...)` — context manager for a scoped override; merges with any ambient context.
+- `trace(correlation_id=...)` — context manager for a correlation scope; resets the auto-chain.
+
+### Signatures
+
+```python
+class LeanLLMContext(BaseModel):
+    user_id: str | None = None
+    session_id: str | None = None
+    feature: str | None = None
+    environment: str | None = None
+    custom_tags: dict[str, str] = {}
+
+    correlation_id: str | None = None
+    parent_request_id: str | None = None
+
+    def merged_labels(self, *, extra: dict[str, str] | None = None) -> dict[str, str]: ...
+    def merge(self, *, other: LeanLLMContext) -> LeanLLMContext: ...
+
+def set_global_context(*, context: LeanLLMContext) -> None: ...
+
+@contextmanager
+def use_context(*, context: LeanLLMContext) -> Iterator[LeanLLMContext]: ...
+
+@contextmanager
+def trace(*, correlation_id: str | None = None) -> Iterator[LeanLLMContext]: ...
+```
+
+## Examples
+
+### Scoped override with `use_context`
+
+```python
+from leanllm import LeanLLM, LeanLLMConfig, LeanLLMContext, use_context
+
+client = LeanLLM(
+    api_key="sk-...",
+    config=LeanLLMConfig(database_url="sqlite:///events.db"),
+)
+
+with use_context(context=LeanLLMContext(user_id="u-42", feature="onboarding")):
+    client.chat(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": "Welcome the user."}],
+    )
+    # event.labels = {"user_id": "u-42", "feature": "onboarding"}
+```
+
+### Tracing a multi-step flow
+
+```python
+import uuid
+from leanllm import LeanLLM, LeanLLMConfig, trace
+
+client = LeanLLM(
+    api_key="sk-...",
+    config=LeanLLMConfig(database_url="sqlite:///events.db"),
+)
+
+with trace(correlation_id=f"flow-{uuid.uuid4()}"):
+    plan = client.chat(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": "Plan the steps."}],
+    )
+    answer = client.chat(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": "Execute the plan."}],
+    )
+# Both events share the same correlation_id and can be fetched together
+# via list_events(correlation_id=...).
+```
+
+### Per-call kwargs win over context
+
+```python
+from leanllm import LeanLLM, LeanLLMConfig, LeanLLMContext, use_context
+
+client = LeanLLM(
+    api_key="sk-...",
+    config=LeanLLMConfig(database_url="sqlite:///events.db"),
+)
+
+with use_context(context=LeanLLMContext(correlation_id="ambient-corr")):
+    client.chat(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": "x"}],
+        correlation_id="explicit-wins",
+    )
+    # event.correlation_id == "explicit-wins"
+```
+
+## Configuration
+
+Context-related defaults live on `LeanLLMConfig`:
+
+| Field | Env var | Default | What it does |
+|---|---|---|---|
+| `environment` | `LEANLLM_ENVIRONMENT` | `None` | Default `metadata["environment"]` if no context overrides it. |
+| `auto_chain` | `LEANLLM_AUTO_CHAIN` | `false` | Auto-fill `parent_request_id` with the previous emitted event in the same task. |
+
+## Edge cases & gotchas
+
+- **Precedence order**: per-call kwargs > ambient context > config. For example, `client.chat(..., correlation_id="x")` always wins over `use_context(...)` and `LeanLLMContext.correlation_id`.
+- **`trace()` resets the auto-chain.** Entering `trace()` means a new chain starts; the first call inside has `parent_request_id=None` even when `auto_chain=True`.
+- **`contextvars` propagation across asyncio.** Context set in a parent task is inherited by child tasks created from it, but tasks created with `loop.create_task` from outside the current context will not inherit unless they copy it explicitly.
+- **`labels` from the context are merged with per-call `labels=`** via `merged_labels()` — per-call entries win on conflict.
+
+## See also
+
+- [Lineage & execution graph](/docs-v2/leanllm/lineage)
+- [DX helpers](/docs-v2/leanllm/dx-helpers)
+- [Runtime toggles](/docs-v2/leanllm/runtime-toggles)
