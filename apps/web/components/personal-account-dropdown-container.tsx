@@ -5,6 +5,8 @@ import { useSignOut } from '@kit/supabase/hooks/use-sign-out';
 import { useUser } from '@kit/supabase/hooks/use-user';
 import { JWTUserData } from '@kit/supabase/types';
 
+import { cn } from '@kit/ui/utils';
+
 import featuresFlagConfig from '~/config/feature-flags.config';
 import pathsConfig from '~/config/paths.config';
 
@@ -19,6 +21,8 @@ const features = {
 export function ProfileAccountDropdownContainer(props: {
   user?: JWTUserData | null;
   showProfileName?: boolean;
+  className?: string;
+  minimalTrigger?: boolean;
 
   account?: {
     id: string | null;
@@ -36,13 +40,14 @@ export function ProfileAccountDropdownContainer(props: {
 
   return (
     <PersonalAccountDropdown
-      className={'w-full'}
+      className={cn('w-full', props.className)}
       paths={paths}
       features={features}
       user={userData}
       account={props.account}
       signOutRequested={() => signOut.mutateAsync()}
       showProfileName={props.showProfileName}
+      minimalTrigger={props.minimalTrigger}
     />
   );
 }

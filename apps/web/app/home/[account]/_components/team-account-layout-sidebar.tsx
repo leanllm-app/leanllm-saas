@@ -2,11 +2,8 @@ import { JWTUserData } from '@kit/supabase/types';
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarHeader,
 } from '@kit/ui/shadcn-sidebar';
-
-import { ProfileAccountDropdownContainer } from '~/components//personal-account-dropdown-container';
 import { getTeamAccountSidebarConfig } from '~/config/team-account-navigation.config';
 import { TeamAccountNotifications } from '~/home/[account]/_components/team-account-notifications';
 
@@ -48,7 +45,7 @@ function SidebarContainer(props: {
   const collapsible = config.sidebarCollapsedStyle;
 
   return (
-    <Sidebar collapsible={collapsible}>
+    <Sidebar collapsible={collapsible} layout="contained">
       <SidebarHeader className={'h-16 justify-center'}>
         <div className={'flex items-center justify-between gap-x-3'}>
           <TeamAccountAccountsSelector
@@ -66,15 +63,9 @@ function SidebarContainer(props: {
         </div>
       </SidebarHeader>
 
-      <SidebarContent className={`mt-5 h-[calc(100%-160px)] overflow-y-auto`}>
+      <SidebarContent className={`mt-5 flex-1 overflow-y-auto`}>
         <TeamAccountLayoutSidebarNavigation config={config} />
       </SidebarContent>
-
-      <SidebarFooter>
-        <SidebarContent>
-          <ProfileAccountDropdownContainer user={props.user} />
-        </SidebarContent>
-      </SidebarFooter>
     </Sidebar>
   );
 }

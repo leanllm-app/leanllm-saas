@@ -32,11 +32,14 @@ type ScrollRevealProps = {
   className?: string;
 };
 
+/** Dispara cedo no scroll para a animação inteira ficar visível ao rolar. */
+const revealViewport = { once: true as const, amount: 0.1, margin: '0px 0px 22% 0px' };
+
 export function ScrollReveal({
   children,
   preset = 'up',
-  delay = 0,
-  duration = 0.55,
+  delay = 0.22,
+  duration = 1.15,
   className,
 }: ScrollRevealProps) {
   return (
@@ -44,7 +47,7 @@ export function ScrollReveal({
       variants={presetVariants[preset]}
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, amount: 0.2 }}
+      viewport={revealViewport}
       transition={{
         duration,
         delay,
@@ -77,15 +80,15 @@ const itemVariants: Variants = {
 export function StaggerReveal({
   children,
   className,
-  staggerChildren = 0.08,
-  delayChildren = 0,
+  staggerChildren = 0.2,
+  delayChildren = 0.22,
 }: StaggerRevealProps) {
   return (
     <motion.div
       variants={containerVariants}
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, amount: 0.18 }}
+      viewport={revealViewport}
       transition={{
         staggerChildren,
         delayChildren,
@@ -107,7 +110,7 @@ export function RevealItem({ children, className }: RevealItemProps) {
     <motion.div
       variants={itemVariants}
       transition={{
-        duration: 0.45,
+        duration: 1.05,
         ease: [0.22, 1, 0.36, 1],
       }}
       className={className}

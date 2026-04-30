@@ -14,6 +14,7 @@ import { getTeamAccountSidebarConfig } from '~/config/team-account-navigation.co
 import { withI18n } from '~/lib/i18n/with-i18n';
 
 // local imports
+import { TeamAccountDesktopTopNav } from './_components/team-account-desktop-top-nav';
 import { TeamAccountLayoutMobileNavigation } from './_components/team-account-layout-mobile-navigation';
 import { TeamAccountLayoutSidebar } from './_components/team-account-layout-sidebar';
 import { TeamAccountNavigationMenu } from './_components/team-account-navigation-menu';
@@ -58,30 +59,41 @@ async function SidebarLayout({
   return (
     <TeamAccountWorkspaceContextProvider value={data}>
       <SidebarProvider defaultOpen={state.open}>
-        <Page style={'sidebar'}>
-          <PageNavigation>
-            <TeamAccountLayoutSidebar
-              account={account}
-              accountId={data.account.id}
-              accounts={accounts}
-              user={data.user}
-            />
-          </PageNavigation>
+        <div
+          data-team-workspace-shell
+          className={'flex min-h-svh w-full min-w-0 flex-col'}
+        >
+          <TeamAccountDesktopTopNav user={data.user} />
 
-          <PageMobileNavigation className={'flex items-center justify-between'}>
-            <AppLogo />
-
-            <div className={'flex space-x-4'}>
-              <TeamAccountLayoutMobileNavigation
-                userId={data.user.id}
-                accounts={accounts}
+          <Page
+            style={'sidebar'}
+            workspaceShell={'centered'}
+            className={'min-h-0 flex-1'}
+          >
+            <PageNavigation>
+              <TeamAccountLayoutSidebar
                 account={account}
+                accountId={data.account.id}
+                accounts={accounts}
+                user={data.user}
               />
-            </div>
-          </PageMobileNavigation>
+            </PageNavigation>
 
-          {children}
-        </Page>
+            <PageMobileNavigation className={'flex items-center justify-between'}>
+              <AppLogo />
+
+              <div className={'flex space-x-4'}>
+                <TeamAccountLayoutMobileNavigation
+                  userId={data.user.id}
+                  accounts={accounts}
+                  account={account}
+                />
+              </div>
+            </PageMobileNavigation>
+
+            {children}
+          </Page>
+        </div>
       </SidebarProvider>
     </TeamAccountWorkspaceContextProvider>
   );

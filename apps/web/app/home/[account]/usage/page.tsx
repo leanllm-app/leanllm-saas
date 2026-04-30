@@ -1,5 +1,3 @@
-import { Suspense } from 'react';
-
 import { getSupabaseServerClient } from '@kit/supabase/server-client';
 import { AppBreadcrumbs } from '@kit/ui/app-breadcrumbs';
 import {
@@ -17,7 +15,6 @@ import { withI18n } from '~/lib/i18n/with-i18n';
 
 import { TeamAccountLayoutPageHeader } from '../_components/team-account-layout-page-header';
 import { loadTeamWorkspace } from '../_lib/server/team-account-workspace.loader';
-import { EventsFilters } from './_lib/components/events-filters';
 import { EventsTable } from './_lib/components/events-table';
 import { createUsageService } from './_lib/server/usage.service';
 
@@ -42,14 +39,21 @@ async function UsagePage({ params, searchParams }: UsagePageProps) {
   const service = createUsageService(client);
 
   const page = parseInt(sp.page ?? '1', 10) - 1;
+  const parseMultiValue = (value?: string) =>
+    value
+      ? value
+          .split(',')
+          .map((v) => v.trim())
+          .filter(Boolean)
+      : [];
 
   const [result, filterOptions] = await Promise.all([
     service.getEvents({
       accountId: account.id,
       page: Math.max(0, page),
-      model: sp.model,
-      feature: sp.feature,
-      userId: sp.userId,
+      models: parseMultiValue(sp.model),
+      features: parseMultiValue(sp.feature),
+      userIds: parseMultiValue(sp.userId),
       since: sp.since,
       until: sp.until,
     }),
@@ -75,17 +79,15 @@ async function UsagePage({ params, searchParams }: UsagePageProps) {
             </CardHeader>
 
             <CardContent className={'space-y-4'}>
-              <Suspense>
-                <EventsFilters
-                  models={filterOptions.models}
-                  features={filterOptions.features}
-                />
-              </Suspense>
-
               <EventsTable
                 data={result.events}
                 pageIndex={Math.max(0, page)}
                 pageCount={result.pageCount}
+                total={result.total}
+                pageSize={result.pageSize}
+                models={filterOptions.models}
+                features={filterOptions.features}
+                userIds={filterOptions.userIds}
               />
             </CardContent>
           </Card>

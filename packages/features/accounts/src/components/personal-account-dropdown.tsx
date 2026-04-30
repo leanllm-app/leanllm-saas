@@ -33,6 +33,7 @@ export function PersonalAccountDropdown({
   user,
   signOutRequested,
   showProfileName = true,
+  minimalTrigger = false,
   paths,
   features,
   account,
@@ -56,6 +57,9 @@ export function PersonalAccountDropdown({
   };
 
   showProfileName?: boolean;
+
+  /** Sem borda tracejada / cartão — útil na navbar */
+  minimalTrigger?: boolean;
 
   className?: string;
 }) {
@@ -89,11 +93,12 @@ export function PersonalAccountDropdown({
         className={cn(
           'group/trigger fade-in focus:outline-primary flex cursor-pointer items-center group-data-[minimized=true]/sidebar:px-0',
           className ?? '',
-          {
-            ['active:bg-secondary/50 items-center gap-4 rounded-md' +
-            ' hover:bg-secondary border border-dashed p-2 transition-colors']:
-              showProfileName,
-          },
+          showProfileName &&
+            !minimalTrigger &&
+            'active:bg-secondary/50 items-center gap-4 rounded-md hover:bg-secondary border border-dashed p-2 transition-colors',
+          showProfileName &&
+            minimalTrigger &&
+            'items-center gap-3 rounded-lg border-0 px-2 py-1.5 transition-colors hover:bg-muted/60 active:bg-muted/80',
         )}
       >
         <ProfileAvatar

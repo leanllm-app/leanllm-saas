@@ -28,7 +28,7 @@ async function SiteLayout(props: React.PropsWithChildren) {
       </Script>
 
       <MarketingThemeProvider>
-        <div className={'flex min-h-screen flex-col'}>
+        <div className={'flex min-h-screen flex-col bg-white'}>
           {/* <SiteHeader user={user.data} /> */}
           <LpHeader />
 

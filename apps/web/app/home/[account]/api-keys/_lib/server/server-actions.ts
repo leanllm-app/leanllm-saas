@@ -6,9 +6,22 @@ import { getSupabaseServerClient } from '@kit/supabase/server-client';
 import {
   CreateApiKeySchema,
   DeleteApiKeySchema,
+  ListApiKeysSchema,
   RevokeApiKeySchema,
 } from '../schema/api-key.schema';
 import { createApiKeysService } from './api-keys.service';
+
+export const listApiKeysAction = enhanceAction(
+  async (data) => {
+    const client = getSupabaseServerClient();
+    const service = createApiKeysService(client);
+
+    return service.listByAccount(data.accountId);
+  },
+  {
+    schema: ListApiKeysSchema,
+  },
+);
 
 export const createApiKeyAction = enhanceAction(
   async (data) => {

@@ -47,7 +47,7 @@ export default function DashboardDemo() {
   return (
     <div
       className={
-        'animate-in fade-in flex flex-col space-y-4 pb-36 duration-500'
+        'animate-in fade-in flex flex-col space-y-4 duration-500'
       }
     >
       <div className={'grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4'}>

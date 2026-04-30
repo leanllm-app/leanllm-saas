@@ -48,3 +48,76 @@ Optimize dropdowns for mobile
 .site-footer > .container:before {
   top: 0;
 }
+
+/* Degradê suave só na área logada da app (/home/*), não na landing */
+.platform-app-background {
+  background-color: var(--background);
+  background-image:
+    radial-gradient(
+      circle at 0% 0%,
+      color-mix(in oklab, var(--primary) 12%, transparent) 0%,
+      transparent 38%
+    ),
+    radial-gradient(
+      circle at 100% 0%,
+      color-mix(in oklab, var(--primary) 8%, transparent) 0%,
+      transparent 34%
+    );
+  background-attachment: fixed;
+}
+
+/* Workspace shell polish inspired by clean SaaS dashboards (viewport docked sidebar only) */
+[data-sidebar='sidebar']:not([data-shell='contained']) {
+  border-right: 1px solid color-mix(in oklab, var(--sidebar-border) 92%, transparent);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--sidebar-background) 96%, white 4%) 0%,
+      var(--sidebar-background) 100%
+    );
+}
+
+[data-sidebar='sidebar'][data-shell='contained'] {
+  background: transparent;
+}
+
+/* Fly.io-style: active row = soft tint + primary text (beats Tailwind bg-sidebar-accent) */
+[data-sidebar='sidebar'][data-shell='contained']
+  [data-sidebar='menu-button'][data-active='true'] {
+  box-shadow: none !important;
+  background: color-mix(in oklab, var(--sidebar-primary) 14%, transparent) !important;
+  color: var(--sidebar-primary) !important;
+}
+
+[data-sidebar='sidebar'][data-shell='contained']
+  [data-sidebar='menu-button'][data-active='true']
+  svg {
+  color: var(--sidebar-primary) !important;
+}
+
+[data-sidebar='menu-button'][data-active='true'] {
+  box-shadow: none;
+}
+
+[data-sidebar='content'] {
+  scrollbar-width: thin;
+}
+
+/* Team workspace: sidebar altura = viewport − navbar − margens topo+fundo (my-1.5 / sm:my-2 / lg:my-3) */
+[data-team-workspace-shell] {
+  --team-top-nav: 0px;
+  --workspace-y-total: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  [data-team-workspace-shell] {
+    --workspace-y-total: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  [data-team-workspace-shell] {
+    --team-top-nav: 3.5rem;
+    --workspace-y-total: 1.5rem;
+  }
+}

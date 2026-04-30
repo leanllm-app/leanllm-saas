@@ -28,7 +28,7 @@
 
 @layer base {
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
     font-feature-settings:
       'rlig' 1,
       'calt' 1;
@@ -54,5 +54,10 @@
   input::placeholder,
   textarea::placeholder {
     color: theme(--color-muted-foreground);
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--primary) 24%, transparent);
+    color: var(--foreground);
   }
 }

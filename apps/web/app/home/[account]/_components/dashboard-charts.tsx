@@ -35,6 +35,10 @@ const COLORS = [
   'var(--chart-5)',
 ];
 
+const chartCardHeader = 'space-y-0.5 p-4 sm:space-y-1.5 sm:p-6';
+const chartCardContent = 'p-4 pt-0 sm:p-6 sm:pt-0';
+const chartAreaH = 'h-[200px] w-full sm:h-[260px] md:h-[300px]';
+
 const costOverTimeConfig = {
   cost: {
     label: 'Cost (USD)',
@@ -64,15 +68,15 @@ export function CostOverTimeChart(props: {
   }
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="shadow-sm">
+      <CardHeader className={chartCardHeader}>
         <CardTitle>Cost Over Time</CardTitle>
         <CardDescription>Daily spend in USD</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className={chartCardContent}>
         <ChartContainer
           config={costOverTimeConfig}
-          className={'h-[300px] w-full'}
+          className={chartAreaH}
         >
           <LineChart data={props.data}>
             <CartesianGrid vertical={false} />
@@ -111,13 +115,13 @@ export function TopFeaturesChart(props: {
   }
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="shadow-sm">
+      <CardHeader className={chartCardHeader}>
         <CardTitle>Top Features</CardTitle>
         <CardDescription>Cost by feature</CardDescription>
       </CardHeader>
-      <CardContent>
-        <ChartContainer config={featureConfig} className={'h-[300px] w-full'}>
+      <CardContent className={chartCardContent}>
+        <ChartContainer config={featureConfig} className={chartAreaH}>
           <BarChart data={props.data} layout="vertical">
             <CartesianGrid horizontal={false} />
             <XAxis
@@ -150,13 +154,13 @@ export function TopModelsChart(props: {
   }
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="shadow-sm">
+      <CardHeader className={chartCardHeader}>
         <CardTitle>Top Models</CardTitle>
         <CardDescription>Cost by model</CardDescription>
       </CardHeader>
-      <CardContent>
-        <ChartContainer config={modelConfig} className={'h-[300px] w-full'}>
+      <CardContent className={chartCardContent}>
+        <ChartContainer config={modelConfig} className={chartAreaH}>
           <PieChart>
             <ChartTooltip content={<ChartTooltipContent />} />
             <Pie
@@ -184,14 +188,14 @@ export function TopModelsChart(props: {
 
 function EmptyChart(props: { title: string }) {
   return (
-    <Card>
-      <CardHeader>
+    <Card className="shadow-sm">
+      <CardHeader className={chartCardHeader}>
         <CardTitle>{props.title}</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className={chartCardContent}>
         <div
           className={
-            'text-muted-foreground flex h-[300px] items-center justify-center text-sm'
+            'text-muted-foreground flex h-[200px] items-center justify-center text-sm sm:h-[260px] md:h-[300px]'
           }
         >
           No data available yet. Start sending events with the LeanLLM SDK.

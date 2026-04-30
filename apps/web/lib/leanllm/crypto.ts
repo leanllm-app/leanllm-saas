@@ -4,7 +4,12 @@
  */
 export async function generateApiKey() {
   const rawKey = 'lllm_' + crypto.randomUUID().replace(/-/g, '').slice(0, 32);
-  const keyPrefix = rawKey.slice(0, 12) + '...';
+  /**
+   * Identification prefix persisted in DB (full raw key is never stored).
+   * rawKey length is 37 (`lllm_` + 32 hex). We keep the first 32 chars so the
+   * dashboard matches what the user saw at creation except the last 5 chars.
+   */
+  const keyPrefix = rawKey.slice(0, 32);
   const keyHash = await hashApiKey(rawKey);
 
   return { rawKey, keyPrefix, keyHash };

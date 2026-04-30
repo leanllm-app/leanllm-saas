@@ -12,6 +12,8 @@ type PageProps = React.PropsWithChildren<{
   contentContainerClassName?: string;
   className?: string;
   sticky?: boolean;
+  /** Sidebar + main column inside a centered max-width shell (wider than 7xl), Fly.io-style */
+  workspaceShell?: 'full' | 'centered';
 }>;
 
 const ENABLE_SIDEBAR_TRIGGER = process.env.NEXT_PUBLIC_ENABLE_SIDEBAR_TRIGGER
@@ -33,23 +35,61 @@ export function Page(props: PageProps) {
 
 function PageWithSidebar(props: PageProps) {
   const { Navigation, Children, MobileNavigation } = getSlotsFromPage(props);
+  const workspaceShell = props.workspaceShell ?? 'full';
+
+  if (workspaceShell === 'centered') {
+    return (
+      <div
+        className={cn(
+          'flex min-h-0 min-w-0 flex-1 overflow-x-hidden',
+          props.className,
+        )}
+      >
+        <div
+          className={
+            props.contentContainerClassName ??
+            'mx-auto my-1.5 flex min-h-0 w-full max-w-screen-2xl flex-1 items-start gap-3 px-3 sm:my-2 sm:gap-4 sm:px-4 lg:my-3 lg:gap-6 lg:px-6'
+          }
+        >
+          {Navigation}
+
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+            {MobileNavigation}
+
+            <div
+              className={
+                'w-full shrink-0 rounded-xl border border-border/60 bg-card pb-3 shadow-sm sm:rounded-2xl sm:pb-4'
+              }
+            >
+              {Children}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
-      className={cn('flex min-w-0 flex-1 overflow-x-hidden', props.className)}
+      className={cn(
+        'flex min-h-0 min-w-0 flex-1 overflow-x-hidden',
+        props.className,
+      )}
     >
       {Navigation}
 
       <div
         className={
           props.contentContainerClassName ??
-          'mx-auto flex h-screen w-full min-w-0 flex-1 flex-col bg-inherit'
+          'mx-auto flex h-screen w-full min-w-0 flex-1 flex-col bg-transparent'
         }
       >
         {MobileNavigation}
 
         <div
-          className={'bg-background flex min-w-0 flex-1 flex-col px-4 lg:px-0'}
+          className={
+            'mx-auto flex w-full max-w-[1440px] min-w-0 flex-1 flex-col px-4 pb-4 lg:px-6 lg:pb-6'
+          }
         >
           {Children}
         </div>
@@ -66,7 +106,7 @@ export function PageMobileNavigation(
   return (
     <div
       className={cn(
-        'flex w-full items-center border-b px-4 py-2 lg:hidden lg:px-0',
+        'flex w-full items-center border-b px-3 py-1.5 sm:px-4 sm:py-2 lg:hidden lg:px-0',
         props.className,
       )}
     >
@@ -113,7 +153,10 @@ export function PageBody(
     className?: string;
   }>,
 ) {
-  const className = cn('flex min-w-0 flex-1 flex-col lg:px-4', props.className);
+  const className = cn(
+    'flex min-w-0 flex-1 flex-col px-3 sm:px-4 lg:px-4',
+    props.className,
+  );
 
   return <div className={className}>{props.children}</div>;
 }
@@ -163,7 +206,7 @@ export function PageHeader({
   return (
     <div
       className={cn(
-        'flex items-center justify-between py-5 lg:px-4',
+        'flex items-center justify-between px-3 py-3 sm:px-4 sm:py-4 lg:px-4 lg:py-5',
         className,
       )}
     >

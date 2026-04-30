@@ -68,11 +68,13 @@ async function TeamAccountHomePage({ params }: TeamAccountHomePageProps) {
       <PageBody>
         <div
           className={
-            'animate-in fade-in flex flex-col space-y-4 pb-36 duration-500'
+            'animate-in fade-in flex flex-col space-y-2 duration-500 sm:space-y-3 md:space-y-4'
           }
         >
           <div
-            className={'grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4'}
+            className={
+              'grid grid-cols-1 gap-2 sm:gap-3 md:grid-cols-2 md:gap-4 xl:grid-cols-4'
+            }
           >
             <SummaryCard
               title="Total Cost"
@@ -102,7 +104,7 @@ async function TeamAccountHomePage({ params }: TeamAccountHomePageProps) {
 
           <CostOverTimeChart data={costOverTime} />
 
-          <div className={'grid grid-cols-1 gap-4 lg:grid-cols-2'}>
+          <div className={'grid grid-cols-1 gap-2 sm:gap-3 lg:grid-cols-2 lg:gap-4'}>
             <TopFeaturesChart data={costByFeature} />
             <TopModelsChart data={costByModel} />
           </div>
@@ -119,16 +121,14 @@ function SummaryCard(props: {
   icon: React.ReactNode;
 }) {
   return (
-    <Card>
-      <CardHeader className={'flex flex-row items-center justify-between pb-2'}>
-        <CardTitle className={'text-sm font-medium'}>{props.title}</CardTitle>
-        <span className={'text-muted-foreground'}>{props.icon}</span>
+    <Card className="shadow-sm">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-2 sm:p-4">
+        <CardTitle className="text-sm font-medium">{props.title}</CardTitle>
+        <span className="text-muted-foreground">{props.icon}</span>
       </CardHeader>
-      <CardContent>
-        <div className={'text-2xl font-bold'}>{props.value}</div>
-        <CardDescription className={'text-xs'}>
-          {props.description}
-        </CardDescription>
+      <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
+        <div className="text-xl font-bold sm:text-2xl">{props.value}</div>
+        <CardDescription className="text-xs">{props.description}</CardDescription>
       </CardContent>
     </Card>
   );

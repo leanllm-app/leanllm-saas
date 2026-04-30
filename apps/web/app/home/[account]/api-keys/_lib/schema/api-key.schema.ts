@@ -16,3 +16,7 @@ export const DeleteApiKeySchema = z.object({
   apiKeyId: z.string().uuid(),
   accountId: z.string().uuid(),
 });
+
+export const ListApiKeysSchema = z.object({
+  accountId: z.string().uuid(),
+});

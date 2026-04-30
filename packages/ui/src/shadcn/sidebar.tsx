@@ -180,11 +180,14 @@ const Sidebar: React.FC<
     side?: 'left' | 'right';
     variant?: 'sidebar' | 'floating' | 'inset' | 'ghost';
     collapsible?: 'offcanvas' | 'icon' | 'none';
+    /** dock = fixed to viewport (default); contained = column inside a centered shell (e.g. max-w-screen-2xl) */
+    layout?: 'dock' | 'contained';
   }
 > = ({
   side = 'left',
   variant = 'sidebar',
   collapsible = 'offcanvas',
+  layout = 'dock',
   className,
   children,
   ref,
@@ -233,6 +236,38 @@ const Sidebar: React.FC<
           <div className="flex h-full w-full flex-col">{children}</div>
         </SheetContent>
       </Sheet>
+    );
+  }
+
+  if (layout === 'contained') {
+    return (
+      <div
+        ref={ref}
+        className={cn(
+          'group peer relative hidden h-[calc(100svh_-_var(--team-top-nav,0px)_-_var(--workspace-y-total,0px))] max-h-[calc(100svh_-_var(--team-top-nav,0px)_-_var(--workspace-y-total,0px))] shrink-0 md:flex',
+          className,
+        )}
+        data-state={state}
+        data-collapsible={state === 'collapsed' ? collapsible : ''}
+        data-variant={variant}
+        data-side={side}
+        {...props}
+      >
+        <div
+          data-sidebar="sidebar"
+          data-shell="contained"
+          className={cn(
+            'text-sidebar-foreground flex h-full min-h-0 flex-col overflow-hidden transition-[width] duration-200 ease-linear',
+            'w-(--sidebar-width) border-0 bg-transparent shadow-none',
+            'group-data-[collapsible=offcanvas]:w-0',
+            variant === 'floating' || variant === 'inset'
+              ? 'group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]'
+              : 'group-data-[collapsible=icon]:w-(--sidebar-width-icon)',
+          )}
+        >
+          {children}
+        </div>
+      </div>
     );
   }
 

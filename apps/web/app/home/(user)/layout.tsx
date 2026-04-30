@@ -44,17 +44,19 @@ async function SidebarLayout({ children }: React.PropsWithChildren) {
   return (
     <UserWorkspaceContextProvider value={workspace}>
       <SidebarProvider defaultOpen={state.open}>
-        <Page style={'sidebar'}>
-          <PageNavigation>
-            <HomeSidebar workspace={workspace} />
-          </PageNavigation>
+        <div className="platform-workspace-bg flex min-h-svh w-full flex-col">
+          <Page style={'sidebar'} className="min-h-0 flex-1">
+            <PageNavigation>
+              <HomeSidebar workspace={workspace} />
+            </PageNavigation>
 
-          <PageMobileNavigation className={'flex items-center justify-between'}>
-            <MobileNavigation workspace={workspace} />
-          </PageMobileNavigation>
+            <PageMobileNavigation className={'flex items-center justify-between'}>
+              <MobileNavigation workspace={workspace} />
+            </PageMobileNavigation>
 
-          {children}
-        </Page>
+            {children}
+          </Page>
+        </div>
       </SidebarProvider>
     </UserWorkspaceContextProvider>
   );
@@ -65,7 +67,7 @@ function HeaderLayout({ children }: React.PropsWithChildren) {
 
   return (
     <UserWorkspaceContextProvider value={workspace}>
-      <Page style={'header'}>
+      <Page style={'header'} className={'platform-workspace-bg'}>
         <PageNavigation>
           <HomeMenuNavigation workspace={workspace} />
         </PageNavigation>

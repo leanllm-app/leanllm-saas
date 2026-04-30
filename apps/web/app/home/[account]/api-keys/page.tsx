@@ -15,8 +15,7 @@ import { withI18n } from '~/lib/i18n/with-i18n';
 
 import { TeamAccountLayoutPageHeader } from '../_components/team-account-layout-page-header';
 import { loadTeamWorkspace } from '../_lib/server/team-account-workspace.loader';
-import { ApiKeysTable } from './_lib/components/api-keys-table';
-import { CreateKeyDialog } from './_lib/components/create-key-dialog';
+import { ApiKeysSection } from './_lib/components/api-keys-section';
 import { createApiKeysService } from './_lib/server/api-keys.service';
 
 interface ApiKeysPageProps {
@@ -47,24 +46,17 @@ async function ApiKeysPage({ params }: ApiKeysPageProps) {
       />
 
       <PageBody>
-        <div className={'flex w-full max-w-4xl flex-col space-y-4'}>
+        <div className="flex w-full flex-col space-y-4">
           <Card>
-            <CardHeader
-              className={'flex flex-row items-center justify-between'}
-            >
-              <div className={'flex flex-col space-y-1.5'}>
-                <CardTitle>API Keys</CardTitle>
-                <CardDescription>
-                  Manage API keys for your LeanLLM integration. Keys are used to
-                  authenticate your SDK with the LeanLLM service.
-                </CardDescription>
-              </div>
-
-              <CreateKeyDialog accountId={account.id} />
+            <CardHeader>
+              <CardTitle>API Keys</CardTitle>
+              <CardDescription>
+                Manage API keys for your LeanLLM integration. Keys are used to
+                authenticate your SDK with the LeanLLM service.
+              </CardDescription>
             </CardHeader>
-
             <CardContent>
-              <ApiKeysTable data={apiKeys} />
+              <ApiKeysSection accountId={account.id} initialData={apiKeys} />
             </CardContent>
           </Card>
         </div>

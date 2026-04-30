@@ -19,7 +19,8 @@ export default function AdminLayout(props: React.PropsWithChildren) {
 
   return (
     <SidebarProvider defaultOpen={state.open}>
-      <Page style={'sidebar'}>
+      <div className="platform-workspace-bg flex min-h-svh w-full flex-col">
+        <Page style={'sidebar'} className="min-h-0 flex-1">
         <PageNavigation>
           <AdminSidebar />
         </PageNavigation>
@@ -30,6 +31,7 @@ export default function AdminLayout(props: React.PropsWithChildren) {
 
         {props.children}
       </Page>
+      </div>
     </SidebarProvider>
   );
 }

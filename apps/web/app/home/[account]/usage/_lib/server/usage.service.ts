@@ -16,9 +16,9 @@ class UsageService {
   async getEvents(params: {
     accountId: string;
     page: number;
-    model?: string;
-    feature?: string;
-    userId?: string;
+    models?: string[];
+    features?: string[];
+    userIds?: string[];
     since?: string;
     until?: string;
   }) {
@@ -32,14 +32,14 @@ class UsageService {
       .order('timestamp', { ascending: false })
       .range(params.page * PAGE_SIZE, (params.page + 1) * PAGE_SIZE - 1);
 
-    if (params.model) {
-      query = query.eq('model', params.model);
+    if (params.models && params.models.length > 0) {
+      query = query.in('model', params.models);
     }
-    if (params.feature) {
-      query = query.eq('feature', params.feature);
+    if (params.features && params.features.length > 0) {
+      query = query.in('feature', params.features);
     }
-    if (params.userId) {
-      query = query.eq('user_id', params.userId);
+    if (params.userIds && params.userIds.length > 0) {
+      query = query.in('user_id', params.userIds);
     }
     if (params.since) {
       query = query.gte('timestamp', params.since);
@@ -63,7 +63,7 @@ class UsageService {
   }
 
   async getFilterOptions(accountId: string) {
-    const [modelsResult, featuresResult] = await Promise.all([
+    const [modelsResult, featuresResult, userIdsResult] = await Promise.all([
       this.client
         .from('events')
         .select('model')
@@ -75,6 +75,12 @@ class UsageService {
         .eq('account_id', accountId)
         .not('feature', 'is', null)
         .limit(100),
+      this.client
+        .from('events')
+        .select('user_id')
+        .eq('account_id', accountId)
+        .not('user_id', 'is', null)
+        .limit(200),
     ]);
 
     const models = [...new Set((modelsResult.data ?? []).map((e) => e.model))];
@@ -85,8 +91,15 @@ class UsageService {
           .filter(Boolean) as string[],
       ),
     ];
+    const userIds = [
+      ...new Set(
+        (userIdsResult.data ?? [])
+          .map((e) => e.user_id)
+          .filter(Boolean) as string[],
+      ),
+    ];
 
-    return { models, features };
+    return { models, features, userIds };
   }
 
   async getEventsForExport(params: {
