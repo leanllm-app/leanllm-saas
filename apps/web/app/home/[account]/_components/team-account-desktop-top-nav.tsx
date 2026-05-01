@@ -17,7 +17,7 @@ export function TeamAccountDesktopTopNav(props: { user: JWTUserData }) {
         className={cn(
           'mx-auto flex h-14 w-full max-w-screen-2xl items-center justify-between gap-4 px-3 transition-all ease-out sm:px-4 lg:px-6',
           {
-            'mt-2 rounded-xl border border-border/70 bg-background/85 shadow backdrop-blur-md supports-backdrop-filter:bg-background/60':
+            'mt-2 rounded-xl border border-border/70 bg-background/85  backdrop-blur-md supports-backdrop-filter:bg-background/60':
               scrolled,
           },
         )}

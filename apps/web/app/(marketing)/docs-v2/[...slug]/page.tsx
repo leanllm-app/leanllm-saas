@@ -38,7 +38,7 @@ async function DocumentationPage({ params }: DocumentationPageProps) {
   const Content = page.data.body;
 
   return (
-    <DocsPage toc={page.data.toc} full={true}>
+    <DocsPage toc={page.data.toc}>
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
 

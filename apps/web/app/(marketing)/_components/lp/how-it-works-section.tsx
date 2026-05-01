@@ -35,7 +35,10 @@ const steps: StepItem[] = [
 
 export function HowItWorksSection() {
   return (
-    <section className="overflow-x-clip bg-linear-to-b from-[#f8f9ff] via-white to-[#f9f7ff] md:mx-6 md:rounded-4xl">
+    <section
+      id="how-it-works"
+      className="overflow-x-clip bg-linear-to-b from-[#f8f9ff] via-white to-[#f9f7ff] md:mx-6 md:rounded-4xl"
+    >
       <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-8 sm:py-20 md:px-10">
         <div className="mx-auto w-full max-w-6xl overflow-hidden rounded-3xl border border-slate-200/80 bg-white/95 p-6 shadow-[0_30px_70px_-50px_rgba(80,122,254,0.45)] backdrop-blur-sm sm:p-8 lg:p-10">
           <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-10">

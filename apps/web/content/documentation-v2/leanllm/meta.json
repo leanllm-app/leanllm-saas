@@ -1,0 +1,20 @@
+{
+  "title": "LeanLLM SDK",
+  "pages": [
+    "leanllm",
+    "installation",
+    "quick-start",
+    "configuration",
+    "interception",
+    "context",
+    "normalization",
+    "replay",
+    "lineage",
+    "cost",
+    "redaction",
+    "storage-query",
+    "cli",
+    "runtime-toggles",
+    "dx-helpers"
+  ]
+}

@@ -4,7 +4,10 @@ import pathsConfig from '~/config/paths.config';
 
 export function PricingSection() {
   return (
-    <section className="overflow-x-clip bg-linear-to-b from-[#f8f9ff] via-white to-[#f9f7ff] md:mx-6 md:rounded-4xl">
+    <section
+      id="pricing"
+      className="scroll-mt-24 overflow-x-clip bg-linear-to-b from-[#f8f9ff] via-white to-[#f9f7ff] md:mx-6 md:rounded-4xl"
+    >
       <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-8 sm:py-20 md:px-10">
         <div className="mb-8 text-center sm:mb-10">
           <p className="mx-auto w-fit rounded-md border border-[#655ccf]/20 bg-[#655ccf]/8 px-3 py-1 text-xs font-semibold tracking-[0.14em] text-[#655ccf] uppercase">

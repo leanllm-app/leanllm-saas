@@ -3,10 +3,30 @@ import React from "react";
 import { Portal, PortalBackdrop } from "@kit/ui/portal";
 import { Button } from "@kit/ui/button";
 import { navLinks } from "./lp-header";
-import { XIcon, MenuIcon } from "lucide-react";
+import { XIcon, MenuIcon, GithubIcon } from "lucide-react";
+import Link from "next/link";
+import pathsConfig from "~/config/paths.config";
 
 export function MobileNav() {
 	const [open, setOpen] = React.useState(false);
+	const handleNavClick = (
+		event: React.MouseEvent<HTMLAnchorElement>,
+		href: string
+	) => {
+		if (!href.startsWith("#")) {
+			setOpen(false);
+			return;
+		}
+
+		event.preventDefault();
+		const target = document.querySelector<HTMLElement>(href);
+		if (!target) return;
+		target.scrollIntoView({
+			behavior: "smooth",
+			block: "start",
+		});
+		setOpen(false);
+	};
 
 	return (
 		<div className="md:hidden">
@@ -43,15 +63,29 @@ export function MobileNav() {
 									key={link.label}
 									variant="ghost"
 								>
-									<a href={link.href}>{link.label}</a>
+									<a href={link.href} onClick={(event) => handleNavClick(event, link.href)}>
+										{link.label}
+									</a>
 								</Button>
 							))}
 						</div>
 						<div className="mt-12 flex flex-col gap-2">
-							<Button className="w-full" variant="outline">
-								Sign In
+							<Button asChild className="w-full" variant="ghost">
+								<a
+									href="https://github.com/leanllm-app/LeanLLM"
+									target="_blank"
+									rel="noreferrer"
+									aria-label="GitHub LeanLLM"
+								>
+									<GithubIcon className="size-5" />
+								</a>
 							</Button>
-							<Button className="w-full">Get Started</Button>
+							<Button asChild className="w-full" variant="outline">
+								<Link href={pathsConfig.auth.signIn}>Sign In</Link>
+							</Button>
+							<Button asChild className="w-full">
+								<Link href={pathsConfig.auth.signUp}>Get Started</Link>
+							</Button>
 						</div>
 					</div>
 				</Portal>

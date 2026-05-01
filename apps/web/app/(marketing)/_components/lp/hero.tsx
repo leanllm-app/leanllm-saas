@@ -13,7 +13,7 @@ client = LeanLLM()
 client.chat(model="gpt-4o", messages=[...], labels={"feature": "chat"},)`;
 
   return (
-    <section className="relative isolate overflow-hidden bg-white min-h-screen">
+    <section className="relative isolate overflow-hidden bg-white">
     <div className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-14 pt-20 sm:px-8 sm:pt-24 md:px-10 md:pb-16 lg:pt-28">
       <StaggerReveal
         className="mx-auto flex max-w-5xl flex-col items-center text-center"

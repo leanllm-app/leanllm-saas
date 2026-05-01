@@ -26,7 +26,10 @@ const comparisons: ComparisonItem[] = [
 
 export function WhyLeanLLMSection() {
   return (
-    <section className="mx-auto w-full max-w-5xl  px-4 pb-20 pt-4 sm:px-8 sm:pt-8 md:px-10">
+    <section
+      id="why-leanllm"
+      className="scroll-mt-24 mx-auto w-full max-w-5xl  px-4 pb-20 pt-4 sm:px-8 sm:pt-8 md:px-10"
+    >
       <div className="mx-auto max-w-6xl">
         <p className="mx-auto w-fit rounded-md border border-[#655ccf]/20 bg-[#655ccf]/8 px-3 py-1 text-center text-xs font-semibold tracking-[0.14em] text-[#655ccf] uppercase">
           Why LeanLLM

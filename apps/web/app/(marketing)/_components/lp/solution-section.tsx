@@ -16,7 +16,10 @@ type FeatureType = {
 
 export function SolutionSection() {
   return (
-    <section className="mx-auto w-full max-w-7xl bg-white px-4 pb-16 pt-4 sm:px-8 sm:pb-20 sm:pt-8 md:px-10">
+    <section
+      id="solution"
+      className="scroll-mt-24 mx-auto w-full max-w-7xl bg-white px-4 pb-16 pt-4 sm:px-8 sm:pb-20 sm:pt-8 md:px-10"
+    >
       <div
         aria-hidden="true"
         className="mx-auto mb-10 h-px w-full max-w-6xl bg-linear-to-r from-transparent via-[#507afe]/25 to-transparent sm:mb-12"
