@@ -122,6 +122,49 @@ function getImagesConfig() {
 async function getRedirects() {
   return [
     {
+      source: '/:path*',
+      has: [
+        {
+          type: 'host',
+          value: 'leanllm.com',
+        },
+      ],
+      destination: 'https://leanllm.ai/:path*',
+      permanent: true,
+    },
+    {
+      source: '/:path*',
+      has: [
+        {
+          type: 'host',
+          value: 'www.leanllm.com',
+        },
+      ],
+      destination: 'https://leanllm.ai/:path*',
+      permanent: true,
+    },
+    {
+      source: '/:path*',
+      has: [
+        {
+          type: 'host',
+          value: 'www.leanllm.ai',
+        },
+      ],
+      destination: 'https://leanllm.ai/:path*',
+      permanent: true,
+    },
+    {
+      source: '/privacy',
+      destination: '/privacy-policy',
+      permanent: true,
+    },
+    {
+      source: '/terms',
+      destination: '/terms-of-service',
+      permanent: true,
+    },
+    {
       source: '/server-sitemap.xml',
       destination: '/sitemap.xml',
       permanent: true,
